@@ -4,7 +4,19 @@
     "plugins": [
       "expo-router"
     ],
-    "name": "TextCube",
-    "slug": "TextCube"
+    "name": "文字方塊",
+    "slug": "text-cube",
+    "icon": "./assets/image/app-icon.png",
+    "splash": {
+      "image": "./assets/image/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/image/adaptive-foreground.png",
+        "backgroundColor": "./assets/image/adaptive-background.png"
+      }
+    }
   }
 }
