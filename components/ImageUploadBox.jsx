@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Alert, Image, Pressable, StyleSheet, Text, View, Platform } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { BlurView } from "expo-blur";
 
-export default function ImageUploadBox() {
+export default function ImageUploadBox({ onToggleTopbar }) {
     const [selectedImage, setSelectedImage] = useState(null);
     const [showAlert, setShowAlert] = useState(false);
+    const [zoomed, setZoomed] = useState(false);
+    const longPressTriggered = useRef(false);
+
 
     const pickImage = async () => {
         const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -28,11 +31,24 @@ export default function ImageUploadBox() {
     };
 
     const handleImagePress = () => {
+        if (longPressTriggered.current) {
+            longPressTriggered.current = false;
+            return;
+        }
+        onToggleTopbar(false);
+        setZoomed((prev) => !prev);
+    };
+
+    const handleImageLongPress = () => {
+        longPressTriggered.current = true;
+        onToggleTopbar(false);
+        setZoomed(false);
         setShowAlert(true);
     };
 
     const handleMenuOption = async (option) => {
         setShowAlert(false);
+        onToggleTopbar(true);
         if (option === "change") {
             setTimeout(async () => {
                 await pickImage();
@@ -42,12 +58,24 @@ export default function ImageUploadBox() {
         }
     };
 
+    const closeAlert = () => {
+        setShowAlert(false);
+        onToggleTopbar(true);
+    };
+
     return (
         <View style={styles.container}>
             <View style={styles.imagePosition}>
                 <Pressable
                     onPress={handleImagePress}
-                    style={({ pressed }) => [styles.uploadBox, pressed && styles.pressed]}
+                    onLongPress={handleImageLongPress}
+                    delayLongPress={500}
+                    onPressOut={() => {
+                        if (longPressTriggered.current) {
+                            longPressTriggered.current = false;
+                        }
+                    }}
+                    style={({ pressed }) => [styles.uploadBox, zoomed && styles.zoomed, pressed && styles.pressed]}
                 >
                     <Image
                         source={selectedImage ? { uri: selectedImage } : require("../assets/image/sakura.jpg")}
@@ -56,10 +84,29 @@ export default function ImageUploadBox() {
                     />
                 </Pressable>
             </View>
+            {zoomed && (
+                <Pressable
+                    style={styles.zoomOverlay}
+                    onPress={() => {
+                        setZoomed(false);
+                        onToggleTopbar(true);
+                    }}
+                    onLongPress={handleImageLongPress}
+                    delayLongPress={500}
+                >
+                    <View style={styles.zoomedContainer}>
+                        <Image
+                            source={selectedImage ? { uri: selectedImage } : require("../assets/image/sakura.jpg")}
+                            resizeMode="cover"
+                            style={styles.zoomedImage}
+                        />
+                    </View>
+                </Pressable>
+            )}
             {showAlert && (
                 <Pressable
                     style={styles.alertOverlayContainer}
-                    onPress={() => setShowAlert(false)}
+                    onPress={closeAlert}
                 >
                     <View style={styles.alertContentWrapper}>
                         <View style={styles.alertWordArea}>
@@ -79,7 +126,7 @@ export default function ImageUploadBox() {
                                 <View style={styles.alertOptionsRight}>
                                     <Pressable
                                         style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}
-                                        onPress={() => setShowAlert(false)}
+                                        onPress={closeAlert}
                                     >
                                         <Text style={[styles.menuText, { color: '#666' }]}>取消</Text>
                                     </Pressable>
@@ -108,7 +155,6 @@ const styles = StyleSheet.create({
         height: "100%",
         alignItems: "center",
         justifyContent: "center",
-        // paddingTop: "13%",
         // backgroundColor: "red"
     },
     imagePosition: {
@@ -134,7 +180,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         width: "100%",
         height: "100%",
-        backgroundColor: "rgba(247, 246, 244, 0.8)",
+        backgroundColor: "rgba(0, 0, 0, 0.8)",
         // backgroundColor: "blue",
     },
     alertContentWrapper: {
@@ -196,4 +242,30 @@ const styles = StyleSheet.create({
         height: "100%",
         zIndex: 2,
     },
+    zoomed: {
+        width: "55%",
+        height: "80%",
+    },
+    zoomOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 20,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    zoomedContainer: {
+        width: '90%',
+        aspectRatio: 157 / 534,
+        maxHeight: '90%',
+        overflow: 'hidden',
+    },
+    zoomedImage: {
+        width: '100%',
+        height: '100%',
+    },
+
 });
