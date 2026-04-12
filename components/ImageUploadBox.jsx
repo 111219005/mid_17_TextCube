@@ -115,7 +115,7 @@ export default function ImageUploadBox( ) {
             <View style={styles.alertWordArea}>
               <View style={styles.alertHeader}>
                 <Text style={styles.alertTitle}>圖片選項</Text>
-                <Text style={styles.alertSubtitle}>你想怎麼處理這張圖片？</Text>
+                <Text style={styles.alertSubtitle}>請選擇要執行的操作。</Text>
               </View>
 
               <View style={styles.alertOptionsAll}>
@@ -173,6 +173,7 @@ const styles = StyleSheet.create({
     height: "100%",
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "pink",
   },
   imagePosition: {
     position: "absolute",
