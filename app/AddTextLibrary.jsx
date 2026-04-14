@@ -4,7 +4,6 @@ import * as ImagePicker from "expo-image-picker";
 import Feather from "@expo/vector-icons/Feather";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTextLibraries } from "../components/TextLibraryContext.jsx";
-import TopBar from "../components/TopBar.jsx";
 
 const DEFAULT_IMAGE = require("../assets/image/sakura.jpg");
 
@@ -155,7 +154,6 @@ export default function AddTextLibrary() {
 
   return (
     <View style={styles.screen}>
-        <TopBar onMenuPress={() => setIsMenuOpen(true)} />
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -258,7 +256,7 @@ export default function AddTextLibrary() {
           style={styles.modalOverlay}
           onPress={() => setModalVisible(false)}
         >
-          <Pressable style={styles.modalCard} onPress={() => {}}>
+          <Pressable style={styles.modalCard} onPress={() => { }}>
             <Text style={styles.modalTitle}>Add Text</Text>
             <Text style={styles.modalHint}>
               Put one item on each line. It can be a single word or a sentence.
@@ -340,7 +338,6 @@ export default function AddTextLibrary() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#f5efe8",
   },
   content: {
     paddingHorizontal: 20,

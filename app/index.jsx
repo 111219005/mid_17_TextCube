@@ -1,21 +1,20 @@
 import * as SplashScreen from "expo-splash-screen";
-import { StatusBar, StyleSheet, View } from "react-native";
+import { StatusBar, StyleSheet, View, TouchableOpacity, Text, Image, ScrollView } from "react-native";
 import { useEffect, useState } from "react";
-import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
-import TopBar from "../components/TopBar.jsx";
 import ImageUploadBox from "../components/ImageUploadBox.jsx";
-import BackgroundImage from "../components/BackgroundImage.jsx";
-import Drawer from "../components/Drawer.jsx";
-import LatestEntries from "../components/LatestEntries.jsx";
+import { useRouter } from "expo-router";
+import { useTextLibraries } from "../components/TextLibraryContext.jsx";
+
 
 SplashScreen.preventAutoHideAsync();
 
 export default function Page() {
 
-  const insets = useSafeAreaInsets();
-  
+  const router = useRouter();
+  const { recentEntries } = useTextLibraries();
+  const latestEntries = recentEntries.slice(0, 6).reverse();
+
   const [appIsReady, setAppIsReady] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     async function prepare() {
@@ -42,26 +41,58 @@ export default function Page() {
   }
 
   return (
-    <SafeAreaProvider>
-      <BackgroundImage>
-        <StatusBar barStyle="dark-content" backgroundColor="transparent" />
-        <View style={[styles.container, { paddingTop: insets.top }]}>
-          <View style={styles.main}>
-            <TopBar onMenuPress={() => setIsMenuOpen(true)} />
-            <ImageUploadBox />
-            <LatestEntries />
+    <>
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" />
+      <View style={styles.container}>
+        <View style={styles.main}>
+          <ImageUploadBox />
+          <View style={styles.lastEntriesContainer}>
+            <ScrollView
+              style={styles.scroll}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.feedSection}>
+                <View style={styles.stackArea}>
+                  {latestEntries.map((entry, index) => {
+                    const offset = (latestEntries.length - index - 1) * 18;
+                    return (
+                      <TouchableOpacity
+                        key={entry.id}
+                        style={[
+                          styles.stackCard,
+                          {
+                            marginTop: index === 0 ? 0 : -36,
+                            transform: [{ translateY: offset }],
+                          },
+                        ]}
+                        onPress={() => router.push(`/AddTextLibrary?id=${entry.libraryId}`)}
+                      >
+                        <View style={styles.stackCardHeader}>
+                          <Text style={styles.stackCategory}>{entry.categoryName}</Text>
+                        </View>
+                        <Text style={styles.stackText}>{entry.text}</Text>
+                        {entry.bannerUri ? (
+                          <Image source={{ uri: entry.bannerUri }} style={styles.stackImage} />
+                        ) : null}
+                      </TouchableOpacity>
+                    );
+                  })
+                  }
+                </View>
+              </View>
+            </ScrollView>
           </View>
-          <Drawer isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
         </View>
-      </BackgroundImage>
-    </SafeAreaProvider>
+      </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor: "yellow"
+    backgroundColor: "yellow"
   },
   main: {
     height: "100%",
@@ -69,5 +100,57 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingHorizontal: 16,
     backgroundColor: "red",
+  },
+  lastEntriesContainer: {
+    position: "absolute",
+    zIndex: 0,
+    width: "65%",
+    height: "100%",
+    // marginTop: "25%",
+    // justifyContent: "center",
+    alignItems: "flex-end",
+    backgroundColor: "#00FF0080", 
+  },
+  scroll: {
+    width: "80%",
+    height: "65%",
+    marginLeft: "5%",
+    marginTop: "42.1%",
+    flexGrow: 0,
+    backgroundColor: "#ff00ff80",
+  },
+  scrollContent: {
+    // backgroundColor: "green",
+  },
+  feedSection: {
+    backgroundColor: "#0000ff80",
+  },
+  stackArea: {
+    paddingBottom: 30,
+  },
+  stackCard: {
+    borderRadius: 28,
+    padding: 18,
+  },
+  stackCardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  stackCategory: {
+    color: "#b4663b",
+    fontWeight: "800",
+  },
+  stackText: {
+    fontSize: 18,
+    lineHeight: 26,
+    color: "#24384c",
+  },
+  stackImage: {
+    width: "100%",
+    height: 120,
+    borderRadius: 18,
+    marginTop: 14,
   },
 });

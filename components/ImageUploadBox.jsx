@@ -172,8 +172,8 @@ const styles = StyleSheet.create({
     width: "110%",
     height: "100%",
     alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "pink",
+    // justifyContent: "center",
+    // backgroundColor: "pink",
   },
   imagePosition: {
     position: "absolute",
@@ -181,7 +181,8 @@ const styles = StyleSheet.create({
     width: "85%",
     height: "100%",
     alignItems: "flex-end",
-    justifyContent: "center",
+    marginTop: "25%"
+    // justifyContent: "center",
   },
   uploadBox: {
     position: "absolute",
