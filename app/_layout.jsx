@@ -4,34 +4,43 @@ import { Stack, usePathname } from "expo-router";
 import { TextLibraryProvider } from "../components/TextLibraryContext.jsx";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useState } from "react";
-import { DefaultTheme, ThemeProvider } from "@react-navigation/native";
+import { DefaultTheme } from "@react-navigation/native";
 import Drawer from "../components/Drawer.jsx";
 import NavBar from "../components/TopBar.jsx";
 import BackTopBar from "../components/BackTopBar.jsx";
 import BackgroundImage from "../components/BackgroundImage.jsx";
+import { ThemeProvider as CustomThemeProvider, useTheme } from '../context/ThemeContext';
+import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
 
 function AppLayoutContent() {
     const insets = useSafeAreaInsets();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const pathname = usePathname();
     const isHomePage = pathname === "/";
+    const isAddTextLibrary = pathname === "/AddTextLibrary";
+    const { theme } = useTheme();
 
-    const MyTheme = {
+    const navigationTheme = {
         ...DefaultTheme,
+        dark: theme.dark,
         colors: {
             ...DefaultTheme.colors,
             background: 'transparent',
+            card: theme.colors.tabBar,
+            text: theme.colors.text,
         },
     };
 
     return (
-        <ThemeProvider value={MyTheme}>
+        <NavThemeProvider value={navigationTheme}>
             <BackgroundImage>
                 <View style={[styles.container, { paddingTop: insets.top }]}>
                     {isHomePage ? (
                         <NavBar onMenuPress={() => setIsMenuOpen(true)} />
                     ) : (
-                        <BackTopBar title="編輯文字" />
+                        <View style={isAddTextLibrary ? [styles.absoluteHeader, { top: insets.top }] : {}}>
+                            <BackTopBar />
+                        </View>
                     )}
                     <View style={styles.content}>
                         <Stack screenOptions={{ headerShown: false }}>
@@ -44,7 +53,7 @@ function AppLayoutContent() {
                     <Drawer isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
                 </View>
             </BackgroundImage>
-        </ThemeProvider>
+        </NavThemeProvider>
     );
 }
 
@@ -52,7 +61,9 @@ export default function RootLayout() {
     return (
         <SafeAreaProvider>
             <TextLibraryProvider>
-                <AppLayoutContent />
+                <CustomThemeProvider>
+                    <AppLayoutContent />
+                </CustomThemeProvider>
             </TextLibraryProvider>
         </SafeAreaProvider>
     );
@@ -65,5 +76,10 @@ const styles = StyleSheet.create({
     },
     content: {
         flex: 1,
+    },
+    absoluteHeader: {
+        position: "absolute",
+        zIndex: 100,
+        width: "100%",
     },
 })

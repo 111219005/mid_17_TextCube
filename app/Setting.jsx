@@ -1,35 +1,36 @@
 import { View, Text, StyleSheet, Switch, TouchableOpacity } from 'react-native';
 import { useState } from 'react';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Settings() {
     const [notifications, setNotifications] = useState(true);
-    const [darkMode, setDarkMode] = useState(false);
+    const { isDark, toggleTheme, theme } = useTheme();
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>設定</Text>
+            <Text style={[styles.title, { color: theme.colors.text }]}>設定</Text>
 
-            <View style={styles.settingItem}>
-                <Text style={styles.settingText}>通知</Text>
+            <View style={[styles.settingItem, { borderBottomColor: theme.dark ? '#333' : '#eee' }]}>
+                <Text style={[styles.settingText, { color: theme.colors.text }]}>通知</Text>
                 <Switch
                     value={notifications}
                     onValueChange={setNotifications}
                 />
             </View>
 
-            <View style={styles.settingItem}>
-                <Text style={styles.settingText}>深色模式</Text>
+            <View style={[styles.settingItem, { borderBottomColor: theme.dark ? '#333' : '#eee' }]}>
+                <Text style={[styles.settingText, { color: theme.colors.text }]}>深色模式</Text>
                 <Switch
-                    value={darkMode}
-                    onValueChange={setDarkMode}
+                    value={isDark}
+                    onValueChange={toggleTheme}
                 />
             </View>
 
-            <TouchableOpacity style={styles.button}>
+            <TouchableOpacity style={[styles.button, { backgroundColor: theme.colors.primary }]}>
                 <Text style={styles.buttonText}>清除所有資料</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.button}>
+            <TouchableOpacity style={[styles.button, { backgroundColor: theme.colors.primary }]}>
                 <Text style={styles.buttonText}>關於</Text>
             </TouchableOpacity>
         </View>
@@ -59,7 +60,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     button: {
-        backgroundColor: '#007AFF',
         paddingHorizontal: 20,
         paddingVertical: 15,
         borderRadius: 8,

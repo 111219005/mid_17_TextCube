@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import Feather from "@expo/vector-icons/Feather";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
 import { useTextLibraries } from "../components/TextLibraryContext.jsx";
 
 const DEFAULT_IMAGE = require("../assets/image/sakura.jpg");
@@ -13,20 +13,22 @@ function createDraftId(prefix) {
 
 export default function AddTextLibrary() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { id } = useLocalSearchParams();
   const { getLibraryById, saveLibrary } = useTextLibraries();
   const editingLibrary = typeof id === "string" ? getLibraryById(id) : null;
   const [bannerUri, setBannerUri] = useState(null);
   const [title, setTitle] = useState("");
-  const [categories, setCategories] = useState([
-    { id: createDraftId("category"), name: "Uncategorized" },
-  ]);
+  const [categories, setCategories] = useState([]);
   const [entries, setEntries] = useState([]);
   const [categoryInput, setCategoryInput] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
   const [entryInput, setEntryInput] = useState("");
   const [modalCategoryId, setModalCategoryId] = useState(null);
   const [modalCategoryInput, setModalCategoryInput] = useState("");
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [toastVisible, setToastVisible] = useState(false);
+  const isMounted = useRef(false);
 
   useEffect(() => {
     if (!editingLibrary) {
@@ -123,14 +125,24 @@ export default function AddTextLibrary() {
       return;
     }
 
-    const nextCategoryId = modalCategoryId ?? categories[0]?.id ?? null;
+    let targetCategoryId = modalCategoryId;
+
+    // If no category is selected, and no categories exist yet, create a default one.
+    if (!targetCategoryId && categories.length === 0) {
+      const newCategory = { id: createDraftId("category"), name: "Uncategorized" };
+      setCategories([newCategory]);
+      targetCategoryId = newCategory.id;
+    } else if (!targetCategoryId) {
+      // Default to the first category if one exists but none is selected
+      targetCategoryId = categories[0]?.id ?? null;
+    }
 
     setEntries((currentEntries) => [
       ...currentEntries,
       ...lines.map((text) => ({
         id: createDraftId("entry"),
         text,
-        categoryId: nextCategoryId,
+        categoryId: targetCategoryId,
         createdAt: Date.now(),
       })),
     ]);
@@ -139,8 +151,20 @@ export default function AddTextLibrary() {
     setModalVisible(false);
   };
 
-  const handleSave = () => {
-    const nextLibraryId = saveLibrary({
+  const showToast = () => {
+    setToastVisible(true);
+    setTimeout(() => {
+      setToastVisible(false);
+    }, 2000);
+  };
+
+  const handleSave = useCallback(() => {
+    if (!title.trim()) {
+      // Don't save if there's no title
+      return;
+    }
+    showToast();
+    saveLibrary({
       id: editingLibrary?.id,
       createdAt: editingLibrary?.createdAt,
       title,
@@ -148,39 +172,50 @@ export default function AddTextLibrary() {
       categories,
       entries,
     });
+  }, [editingLibrary, title, bannerUri, categories, entries, saveLibrary]);
 
-    router.replace(`/AddTextLibrary?id=${nextLibraryId}`);
-  };
+  // Auto-save on changes (debounced)
+  useEffect(() => {
+    if (!isMounted.current) {
+      isMounted.current = true;
+      return; // Don't run on initial mount
+    }
+    const timer = setTimeout(() => handleSave(), 5000); // 5-second delay
+    return () => clearTimeout(timer);
+  }, [title, bannerUri, categories, entries, handleSave]);
+
+  // Save on back press
+  useEffect(() => {
+    const listener = navigation.addListener('beforeRemove', handleSave);
+    return () => navigation.removeListener('beforeRemove', listener);
+  }, [navigation, handleSave]);
 
   return (
     <View style={styles.screen}>
+      <View style={styles.bannerCard}>
+        <Image
+          source={bannerUri ? { uri: bannerUri } : DEFAULT_IMAGE}
+          style={styles.banner}
+        />
+        <TouchableOpacity style={styles.bannerAction} onPress={pickImage}>
+          <Feather name="image" size={16} color="#000" />
+        </TouchableOpacity>
+      </View>
+
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.bannerCard}>
-          <Image
-            source={bannerUri ? { uri: bannerUri } : DEFAULT_IMAGE}
-            style={styles.banner}
-          />
-          <TouchableOpacity style={styles.bannerAction} onPress={pickImage}>
-            <Feather name="image" size={16} color="#17324d" />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Library Title</Text>
+        <View style={styles.titleSection}>
           <TextInput
             value={title}
             onChangeText={setTitle}
-            placeholder="Enter library title"
-            placeholderTextColor="#7f8b96"
+            placeholder="新增文字庫標題"
             style={styles.titleInput}
           />
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Section Titles</Text>
+        <View style={styles.categorySection}>
           <View style={styles.categoryRow}>
             {categories.map((category) => (
               <View key={category.id} style={styles.categoryChip}>
@@ -188,31 +223,32 @@ export default function AddTextLibrary() {
               </View>
             ))}
           </View>
-          <View style={styles.addCategoryRow}>
-            <TextInput
-              value={categoryInput}
-              onChangeText={setCategoryInput}
-              placeholder="Add a section title"
-              placeholderTextColor="#7f8b96"
-              style={styles.categoryInput}
-            />
-            <TouchableOpacity
-              style={styles.addCategoryButton}
-              onPress={() => addCategory(categoryInput)}
-            >
-              <Text style={styles.addCategoryButtonText}>Add</Text>
+          {isAddingCategory ? (
+            <View style={styles.addCategoryRow}>
+              <TextInput
+                value={categoryInput}
+                onChangeText={setCategoryInput}
+                placeholder="請輸入段落標題"
+                placeholderTextColor="#7f8b96"
+                style={styles.categoryInput}
+                autoFocus
+                onBlur={() => setIsAddingCategory(false)}
+                onSubmitEditing={() => {
+                  addCategory(categoryInput);
+                  setIsAddingCategory(false);
+                }}
+              />
+            </View>
+          ) : (
+            <TouchableOpacity style={styles.addCategoryPrompt} onPress={() => setIsAddingCategory(true)}>
+              <Feather name="plus-circle" size={16} color="#7f8b96" />
+              <Text style={styles.addCategoryPromptText}>請輸入段落標題</Text>
             </TouchableOpacity>
-          </View>
+          )}
         </View>
 
         <View style={styles.section}>
-          <View style={styles.listHeader}>
-            <Text style={styles.sectionLabel}>Entries</Text>
-            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-              <Feather name="save" size={16} color="#fff" />
-              <Text style={styles.saveButtonText}>Save</Text>
-            </TouchableOpacity>
-          </View>
+          {/* Save button is removed for autosave */}
 
           {entries.length === 0 ? (
             <View style={styles.emptyCard}>
@@ -231,10 +267,11 @@ export default function AddTextLibrary() {
                   </Text>
                 ) : (
                   group.items.map((item) => (
-                    <View key={item.id} style={styles.entryRow}>
-                      <Text style={styles.entryBullet}>-</Text>
-                      <Text style={styles.entryText}>{item.text}</Text>
-                    </View>
+                    <TouchableOpacity key={item.id} style={styles.entryButton}>
+                      <Text style={styles.entryButtonText}>
+                        {item.text}
+                      </Text>
+                    </TouchableOpacity>
                   ))
                 )}
               </View>
@@ -330,6 +367,12 @@ export default function AddTextLibrary() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      {toastVisible && (
+        <View style={styles.toastContainer}>
+          <Text style={styles.toastText}>正在存檔...</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -337,50 +380,47 @@ export default function AddTextLibrary() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    backgroundColor: "orange",
   },
   content: {
-    // paddingHorizontal: 20,
-    // paddingTop: 28,
-    // paddingBottom: 120,
+    paddingHorizontal: 16,
+    paddingBottom: 100, // Make space for floating button
+    backgroundColor: "lightblue",
   },
   bannerCard: {
     width: "100%",
-    marginBottom: 24,
+    height: "15%",
+    // marginBottom: 24,
+    backgroundColor: "lightgreen",
   },
   banner: {
     width: "100%",
-    height: 200,
+    height: "100%",
   },
   bannerAction: {
     position: "absolute",
     right: 16,
     bottom: 16,
-    flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 14,
+    paddingHorizontal: 10,
     paddingVertical: 10,
-    borderRadius: 999,
+    borderRadius: "50%",
     backgroundColor: "rgba(255,255,255,0.9)",
   },
-  section: {
-    marginBottom: 28,
-  },
-  sectionLabel: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#1b3147",
-    marginBottom: 12,
+  titleSection: {
+    width: "100%",
+    justifyContent: "center",
+    backgroundColor: "red",
   },
   titleInput: {
-    backgroundColor: "#fffdf9",
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "#d8c9b8",
-    paddingHorizontal: 18,
-    paddingVertical: 16,
-    fontSize: 18,
-    color: "#24384c",
+    fontSize: 32,
+    fontWeight: "700",
+    color: "#000",
+    backgroundColor: "white",
+  },
+  categorySection: {
+    marginTop: 10,
+backgroundColor: "yellow",
   },
   categoryRow: {
     flexDirection: "row",
@@ -401,6 +441,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 10,
     marginTop: 14,
+  },
+  addCategoryPrompt: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 14,
+    padding: 12,
+    backgroundColor: '#fffdf9',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#d8c9b8',
+  },
+  addCategoryPromptText: {
+    color: '#7f8b96',
   },
   categoryInput: {
     flex: 1,
@@ -475,18 +529,17 @@ const styles = StyleSheet.create({
   groupEmptyText: {
     color: "#7f8b96",
   },
-  entryRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
+  entryButton: {
+    backgroundColor: '#fff',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e5d7c7',
     marginBottom: 8,
+    alignSelf: 'flex-start', // Fit content width
   },
-  entryBullet: {
-    marginRight: 8,
-    color: "#c67e4e",
-    fontSize: 18,
-    lineHeight: 22,
-  },
-  entryText: {
+  entryButtonText: {
     flex: 1,
     color: "#314457",
     lineHeight: 22,
@@ -498,14 +551,9 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: "#d66b3d",
+    backgroundColor: "#D9D9D9",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 10,
   },
   modalOverlay: {
     flex: 1,
@@ -591,5 +639,19 @@ const styles = StyleSheet.create({
   modalPrimaryButtonText: {
     color: "#fff",
     fontWeight: "800",
+  },
+  toastContainer: {
+    position: 'absolute',
+    bottom: 100,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  toastText: {
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    color: 'white',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
   },
 });

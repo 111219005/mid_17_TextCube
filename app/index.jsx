@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import ImageUploadBox from "../components/ImageUploadBox.jsx";
 import { useRouter } from "expo-router";
 import { useTextLibraries } from "../components/TextLibraryContext.jsx";
-
+import { useTheme } from "../context/ThemeContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -13,7 +13,8 @@ export default function Page() {
   const router = useRouter();
   const { recentEntries } = useTextLibraries();
   const latestEntries = recentEntries.slice(0, 6).reverse();
-
+  const { theme } = useTheme();
+  
   const [appIsReady, setAppIsReady] = useState(false);
 
   useEffect(() => {
@@ -63,6 +64,7 @@ export default function Page() {
                           styles.stackCard,
                           {
                             marginTop: index === 0 ? 0 : -36,
+                            backgroundColor: theme.colors.card,
                             transform: [{ translateY: offset }],
                           },
                         ]}
@@ -71,7 +73,7 @@ export default function Page() {
                         <View style={styles.stackCardHeader}>
                           <Text style={styles.stackCategory}>{entry.categoryName}</Text>
                         </View>
-                        <Text style={styles.stackText}>{entry.text}</Text>
+                        <Text style={[styles.stackText, { color: theme.colors.text }]}>{entry.text}</Text>
                         {entry.bannerUri ? (
                           <Image source={{ uri: entry.bannerUri }} style={styles.stackImage} />
                         ) : null}
@@ -92,14 +94,14 @@ export default function Page() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "yellow"
+    // backgroundColor: "yellow"
   },
   main: {
     height: "100%",
     justifyContent: "flex-start",
     paddingTop: 10,
     paddingHorizontal: 16,
-    backgroundColor: "red",
+    // backgroundColor: "red",
   },
   lastEntriesContainer: {
     position: "absolute",
@@ -109,7 +111,7 @@ const styles = StyleSheet.create({
     // marginTop: "25%",
     // justifyContent: "center",
     alignItems: "flex-end",
-    backgroundColor: "#00FF0080", 
+    // backgroundColor: "#00FF0080", 
   },
   scroll: {
     width: "80%",
@@ -130,6 +132,7 @@ const styles = StyleSheet.create({
   },
   stackCard: {
     borderRadius: 28,
+    backgroundColor: "#ffffff",
     padding: 18,
   },
   stackCardHeader: {

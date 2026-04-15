@@ -1,14 +1,16 @@
 import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useTheme } from "../context/ThemeContext";
 
-export default function BackTopBar({ title }) {
+export default function BackTopBar( ) {
     const router = useRouter();
+    const { theme } = useTheme();
 
     return (
         <View style={styles.container}>
             <TouchableOpacity onPress={() => router.back()} style={styles.icons}>
-                    <Ionicons name="chevron-back-outline" size={24} color="#1E1E1E" />
+                    <Ionicons name="chevron-back-outline" size={24} color={theme.colors.text} />
             </TouchableOpacity>
         </View>
     );
@@ -16,6 +18,7 @@ export default function BackTopBar({ title }) {
 
 const styles = StyleSheet.create({
     container: {
+        paddingLeft: 4,
         // backgroundColor: "lightgreen",
     },
     icons: {
@@ -23,5 +26,6 @@ const styles = StyleSheet.create({
         height: 48,
         alignItems: "center",
         justifyContent: "center",
+        // backgroundColor: "pink",
     },
 });

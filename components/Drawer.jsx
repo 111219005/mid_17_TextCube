@@ -1,9 +1,11 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from "../context/ThemeContext";
 
 export default function Drawer({ isOpen, onClose }) {
     const router = useRouter();
+    const { theme } = useTheme();
 
     if (!isOpen) {
         return null;
@@ -12,14 +14,14 @@ export default function Drawer({ isOpen, onClose }) {
     return (
 
         <View style={styles.overlay}>
-            <View style={styles.drawer}>
+            <View style={[styles.drawer, { backgroundColor: theme.colors.card }]}>
                 <SafeAreaView edges={['top']}>
-                    <Text style={styles.title}>TextCube</Text>
-                    <View style={styles.line} />
+                    <Text style={[styles.title, { color: theme.colors.text }]}>TextCube</Text>
+                    <View style={[styles.line, { backgroundColor: theme.dark ? '#333' : '#EDEDEF' }]} />
 
                     <TouchableOpacity onPress={() => { router.push("/"); onClose(); }}>
                         <View style={[styles.item, styles.firstItem]}>
-                            <Text style={styles.itemText}>首頁</Text>
+                            <Text style={[styles.itemText, { color: theme.colors.text }]}>首頁</Text>
                         </View>
                     </TouchableOpacity>
 
@@ -30,7 +32,7 @@ export default function Drawer({ isOpen, onClose }) {
                         }}
                     >
                         <View style={styles.item}>
-                            <Text style={styles.itemText}>文字庫</Text>
+                            <Text style={[styles.itemText, { color: theme.colors.text }]}>文字庫</Text>
                         </View>
                     </TouchableOpacity>
 
@@ -41,7 +43,7 @@ export default function Drawer({ isOpen, onClose }) {
                         }}
                     >
                         <View style={styles.item}>
-                            <Text style={styles.itemText}>新增文字庫</Text>
+                            <Text style={[styles.itemText, { color: theme.colors.text }]}>新增文字庫</Text>
                         </View>
                     </TouchableOpacity>
 
@@ -52,7 +54,7 @@ export default function Drawer({ isOpen, onClose }) {
                         }}
                     >
                         <View style={styles.item}>
-                            <Text style={styles.itemText}>設定</Text>
+                            <Text style={[styles.itemText, { color: theme.colors.text }]}>設定</Text>
                         </View>
                     </TouchableOpacity>
                 </SafeAreaView>
