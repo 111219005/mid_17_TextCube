@@ -5,6 +5,7 @@ import ImageUploadBox from "../components/ImageUploadBox.jsx";
 import { useRouter } from "expo-router";
 import { useTextLibraries } from "../components/TextLibraryContext.jsx";
 import { useTheme } from "../context/ThemeContext";
+import * as Clipboard from 'expo-clipboard';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -16,6 +17,7 @@ export default function Page() {
   const { theme } = useTheme();
   
   const [appIsReady, setAppIsReady] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
   useEffect(() => {
     async function prepare() {
@@ -40,6 +42,14 @@ export default function Page() {
   if (!appIsReady) {
     return null;
   }
+
+  const handleCopy = async (text) => {
+    await Clipboard.setStringAsync(text);
+    setToastMessage("已複製到剪貼簿！");
+    setTimeout(() => {
+      setToastMessage("");
+    }, 2000);
+  };
 
   return (
     <>
@@ -67,12 +77,9 @@ export default function Page() {
                             transform: [{ translateY: offset }],
                           },
                         ]}
-                        onPress={() => router.push(`/AddTextLibrary?id=${entry.libraryId}`)}
+                      onPress={() => handleCopy(entry.text)}
                       >
                         <Text style={[styles.stackText, { color: theme.colors.text }]}>{entry.text}</Text>
-                        {entry.bannerUri ? (
-                          <Image source={{ uri: entry.bannerUri }} style={styles.stackImage} />
-                        ) : null}
                       </TouchableOpacity>
                     );
                   })
@@ -82,6 +89,12 @@ export default function Page() {
             </ScrollView>
           </View>
         </View>
+
+        {toastMessage ? (
+          <View style={styles.toastContainer}>
+            <Text style={styles.toastText}>{toastMessage}</Text>
+          </View>
+        ) : null}
       </View>
     </>
   );
@@ -131,7 +144,7 @@ const styles = StyleSheet.create({
     // backgroundColor: "#00ff0080",
   },
   stackText: {
-    fontSize: 20,
+    fontSize: 18,
     lineHeight: 26,
     color: "#24384c",
   },
@@ -140,5 +153,19 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 18,
     marginTop: 14,
+  },
+  toastContainer: {
+    position: 'absolute',
+    bottom: 100,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  toastText: {
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    color: 'white',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
   },
 });

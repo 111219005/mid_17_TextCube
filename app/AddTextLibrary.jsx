@@ -4,6 +4,7 @@ import * as ImagePicker from "expo-image-picker";
 import Feather from "@expo/vector-icons/Feather";
 import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
 import { useTextLibraries } from "../components/TextLibraryContext.jsx";
+import * as Clipboard from 'expo-clipboard';
 
 const DEFAULT_IMAGE = require("../assets/image/sakura.jpg");
 
@@ -30,7 +31,7 @@ export default function AddTextLibrary() {
   const [modalCategoryId, setModalCategoryId] = useState(null);
   const [modalCategoryInput, setModalCategoryInput] = useState("");
   const [isAddingCategory, setIsAddingCategory] = useState(false);
-  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
   const isMounted = useRef(false);
 
   useEffect(() => {
@@ -155,11 +156,16 @@ export default function AddTextLibrary() {
     setModalVisible(false);
   };
 
-  const showToast = () => {
-    setToastVisible(true);
+  const showToast = (msg = "正在存檔...") => {
+    setToastMessage(msg);
     setTimeout(() => {
-      setToastVisible(false);
+      setToastMessage("");
     }, 2000);
+  };
+
+  const handleCopy = async (text) => {
+    await Clipboard.setStringAsync(text);
+    showToast("已複製到剪貼簿！");
   };
 
   const handleSave = useCallback(() => {
@@ -167,7 +173,7 @@ export default function AddTextLibrary() {
       // Don't save if there's no title
       return;
     }
-    showToast();
+    showToast("正在存檔...");
     const savedId = saveLibrary({
       id: currentLibraryIdRef.current,
       createdAt: editingLibrary?.createdAt,
@@ -277,7 +283,7 @@ export default function AddTextLibrary() {
                   </Text>
                 ) : (
                   group.items.map((item) => (
-                    <TouchableOpacity key={item.id} style={styles.entryButton}>
+                    <TouchableOpacity key={item.id} style={styles.entryButton} onPress={() => handleCopy(item.text)}>
                       <Text style={styles.entryButtonText}>
                         {item.text}
                       </Text>
@@ -378,11 +384,11 @@ export default function AddTextLibrary() {
         </Pressable>
       </Modal>
 
-      {toastVisible && (
+      {toastMessage ? (
         <View style={styles.toastContainer}>
-          <Text style={styles.toastText}>正在存檔...</Text>
+          <Text style={styles.toastText}>{toastMessage}</Text>
         </View>
-      )}
+      ) : null}
     </View>
   );
 }
@@ -430,7 +436,7 @@ const styles = StyleSheet.create({
   },
   categorySection: {
     marginTop: 10,
-backgroundColor: "yellow",
+    backgroundColor: "yellow",
   },
   categoryRow: {
     flexDirection: "row",
