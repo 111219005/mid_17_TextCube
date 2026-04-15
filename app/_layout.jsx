@@ -1,17 +1,20 @@
 import "react-native-gesture-handler";
 import { View, StyleSheet } from "react-native";
-import { Stack } from "expo-router";
+import { Stack, usePathname } from "expo-router";
 import { TextLibraryProvider } from "../components/TextLibraryContext.jsx";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useState } from "react";
 import { DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import Drawer from "../components/Drawer.jsx";
-import TopBar from "../components/TopBar.jsx";
+import NavBar from "../components/TopBar.jsx";
+import BackTopBar from "../components/BackTopBar.jsx";
 import BackgroundImage from "../components/BackgroundImage.jsx";
 
 function AppLayoutContent() {
     const insets = useSafeAreaInsets();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const pathname = usePathname();
+    const isHomePage = pathname === "/";
 
     const MyTheme = {
         ...DefaultTheme,
@@ -25,7 +28,11 @@ function AppLayoutContent() {
         <ThemeProvider value={MyTheme}>
             <BackgroundImage>
                 <View style={[styles.container, { paddingTop: insets.top }]}>
-                    <TopBar onMenuPress={() => setIsMenuOpen(true)} />
+                    {isHomePage ? (
+                        <NavBar onMenuPress={() => setIsMenuOpen(true)} />
+                    ) : (
+                        <BackTopBar title="編輯文字" />
+                    )}
                     <View style={styles.content}>
                         <Stack screenOptions={{ headerShown: false }}>
                             <Stack.Screen name="index" />

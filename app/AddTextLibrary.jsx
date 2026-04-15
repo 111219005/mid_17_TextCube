@@ -165,7 +165,6 @@ export default function AddTextLibrary() {
           />
           <TouchableOpacity style={styles.bannerAction} onPress={pickImage}>
             <Feather name="image" size={16} color="#17324d" />
-            <Text style={styles.bannerActionText}>Change Banner</Text>
           </TouchableOpacity>
         </View>
 
@@ -340,14 +339,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    paddingHorizontal: 20,
-    paddingTop: 28,
-    paddingBottom: 120,
+    // paddingHorizontal: 20,
+    // paddingTop: 28,
+    // paddingBottom: 120,
   },
   bannerCard: {
-    borderRadius: 24,
-    overflow: "hidden",
-    backgroundColor: "#d7e4ef",
+    width: "100%",
     marginBottom: 24,
   },
   banner: {
@@ -365,10 +362,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 999,
     backgroundColor: "rgba(255,255,255,0.9)",
-  },
-  bannerActionText: {
-    color: "#17324d",
-    fontWeight: "700",
   },
   section: {
     marginBottom: 28,
