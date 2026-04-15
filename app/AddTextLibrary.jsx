@@ -17,6 +17,8 @@ export default function AddTextLibrary() {
   const { id } = useLocalSearchParams();
   const { getLibraryById, saveLibrary } = useTextLibraries();
   const editingLibrary = typeof id === "string" ? getLibraryById(id) : null;
+  const [currentLibraryId, setCurrentLibraryId] = useState(typeof id === "string" ? id : null);
+  const isDataLoaded = useRef(false);
   const [bannerUri, setBannerUri] = useState(null);
   const [title, setTitle] = useState("");
   const [categories, setCategories] = useState([]);
@@ -31,7 +33,7 @@ export default function AddTextLibrary() {
   const isMounted = useRef(false);
 
   useEffect(() => {
-    if (!editingLibrary) {
+    if (!editingLibrary || isDataLoaded.current) {
       return;
     }
 
@@ -43,6 +45,7 @@ export default function AddTextLibrary() {
         : [{ id: createDraftId("category"), name: "Uncategorized" }]
     );
     setEntries(editingLibrary.entries);
+    isDataLoaded.current = true;
   }, [editingLibrary]);
 
   useEffect(() => {
@@ -164,15 +167,20 @@ export default function AddTextLibrary() {
       return;
     }
     showToast();
-    saveLibrary({
-      id: editingLibrary?.id,
+    const savedId = saveLibrary({
+      id: currentLibraryId,
       createdAt: editingLibrary?.createdAt,
       title,
       bannerUri,
       categories,
       entries,
     });
-  }, [editingLibrary, title, bannerUri, categories, entries, saveLibrary]);
+
+    if (savedId !== currentLibraryId) {
+      setCurrentLibraryId(savedId);
+      router.setParams({ id: savedId });
+    }
+  }, [currentLibraryId, editingLibrary, title, bannerUri, categories, entries, saveLibrary, router]);
 
   // Auto-save on changes (debounced)
   useEffect(() => {

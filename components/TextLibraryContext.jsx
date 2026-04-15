@@ -53,6 +53,8 @@ const useTextLibraryStore = create(
       },
 
       getLibraryById: (id) => get().libraries.find((library) => library.id === id) ?? null,
+      
+      clearAllLibraries: () => set({ libraries: [] }),
     }),
     {
       name: "text-library-storage",

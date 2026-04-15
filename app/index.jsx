@@ -59,20 +59,16 @@ export default function Page() {
                     const offset = (latestEntries.length - index - 1) * 18;
                     return (
                       <TouchableOpacity
-                        key={entry.id}
+                      key={`${entry.libraryId}-${entry.id}`}
                         style={[
                           styles.stackCard,
                           {
-                            marginTop: index === 0 ? 0 : -36,
-                            backgroundColor: theme.colors.card,
+                            marginTop: index === 0 ? 0 : 18,
                             transform: [{ translateY: offset }],
                           },
                         ]}
                         onPress={() => router.push(`/AddTextLibrary?id=${entry.libraryId}`)}
                       >
-                        <View style={styles.stackCardHeader}>
-                          <Text style={styles.stackCategory}>{entry.categoryName}</Text>
-                        </View>
                         <Text style={[styles.stackText, { color: theme.colors.text }]}>{entry.text}</Text>
                         {entry.bannerUri ? (
                           <Image source={{ uri: entry.bannerUri }} style={styles.stackImage} />
@@ -108,45 +104,34 @@ const styles = StyleSheet.create({
     zIndex: 0,
     width: "65%",
     height: "100%",
-    // marginTop: "25%",
-    // justifyContent: "center",
-    alignItems: "flex-end",
+    alignItems: "flex-start",
     // backgroundColor: "#00FF0080", 
   },
   scroll: {
-    width: "80%",
+    width: "85%",
     height: "65%",
     marginLeft: "5%",
     marginTop: "42.1%",
     flexGrow: 0,
+    flexDirection: "column-reverse",
     backgroundColor: "#ff00ff80",
   },
   scrollContent: {
     // backgroundColor: "green",
   },
   feedSection: {
-    backgroundColor: "#0000ff80",
+    
+    // backgroundColor: "#0000ff80",
   },
   stackArea: {
-    paddingBottom: 30,
+    gap: 10,
   },
   stackCard: {
-    borderRadius: 28,
-    backgroundColor: "#ffffff",
-    padding: 18,
-  },
-  stackCardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  stackCategory: {
-    color: "#b4663b",
-    fontWeight: "800",
+    paddingVertical: 5,
+    // backgroundColor: "#00ff0080",
   },
   stackText: {
-    fontSize: 18,
+    fontSize: 20,
     lineHeight: 26,
     color: "#24384c",
   },

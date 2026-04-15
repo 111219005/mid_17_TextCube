@@ -37,6 +37,7 @@ export default function TopBar({ onMenuPress = () => { } }) {
 
 const styles = StyleSheet.create({
   topbar: {
+    height: 68,
     zIndex: 1,
     flexDirection: "row",
     alignItems: "center",
