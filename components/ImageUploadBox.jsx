@@ -180,7 +180,8 @@ const styles = StyleSheet.create({
     width: "85%",
     height: "100%",
     alignItems: "flex-end",
-    marginTop: "25%"
+    marginTop: "25%",
+    // backgroundColor: "red",
   },
   uploadBox: {
     position: "absolute",

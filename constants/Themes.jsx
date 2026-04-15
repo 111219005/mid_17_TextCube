@@ -4,8 +4,9 @@ export const LightTheme = {
     background: "#F7F6F4",
     text: "#24384c",
     card: "#ffffff",
-    primary: "#b4663b",
+    primary: "#cacaca",
     tabBar: "#ffffff",
+    borderColor: "#eee",
   },
 };
 
@@ -15,7 +16,8 @@ export const DarkTheme = {
     background: "#000000",
     text: "#ffffff",
     card: "#1e1e1e",
-    primary: "#e68a5c",
+    primary: "#000",
     tabBar: "#121212",
+    borderColor: "#666",
   },
 };

@@ -18,6 +18,7 @@ export default function AddTextLibrary() {
   const { getLibraryById, saveLibrary } = useTextLibraries();
   const editingLibrary = typeof id === "string" ? getLibraryById(id) : null;
   const [currentLibraryId, setCurrentLibraryId] = useState(typeof id === "string" ? id : null);
+  const currentLibraryIdRef = useRef(typeof id === "string" ? id : null);
   const isDataLoaded = useRef(false);
   const [bannerUri, setBannerUri] = useState(null);
   const [title, setTitle] = useState("");
@@ -168,7 +169,7 @@ export default function AddTextLibrary() {
     }
     showToast();
     const savedId = saveLibrary({
-      id: currentLibraryId,
+      id: currentLibraryIdRef.current,
       createdAt: editingLibrary?.createdAt,
       title,
       bannerUri,
@@ -176,11 +177,12 @@ export default function AddTextLibrary() {
       entries,
     });
 
-    if (savedId !== currentLibraryId) {
+    if (savedId !== currentLibraryIdRef.current) {
+      currentLibraryIdRef.current = savedId;
       setCurrentLibraryId(savedId);
       router.setParams({ id: savedId });
     }
-  }, [currentLibraryId, editingLibrary, title, bannerUri, categories, entries, saveLibrary, router]);
+  }, [editingLibrary, title, bannerUri, categories, entries, saveLibrary, router]);
 
   // Auto-save on changes (debounced)
   useEffect(() => {

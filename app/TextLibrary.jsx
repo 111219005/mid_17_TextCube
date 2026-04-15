@@ -18,12 +18,6 @@ export default function TextLibraries() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.header}>
-            <View>
-              <Text style={styles.title}>Text Libraries</Text>
-              <Text style={styles.description}>
-                Each library keeps its banner, sections, and text. Tap a card to edit it.
-              </Text>
-            </View>
             <TouchableOpacity
               style={styles.addButton}
               onPress={() => router.push("/AddTextLibrary")}
@@ -88,17 +82,6 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginBottom: 22,
     gap: 12,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: "#1b3147",
-    marginBottom: 6,
-  },
-  description: {
-    color: "#667787",
-    lineHeight: 22,
-    maxWidth: 240,
   },
   addButton: {
     flexDirection: "row",

@@ -16,8 +16,10 @@ export default function Drawer({ isOpen, onClose }) {
         <View style={styles.overlay}>
             <View style={[styles.drawer, { backgroundColor: theme.colors.card }]}>
                 <SafeAreaView edges={['top']}>
-                    <Text style={[styles.title, { color: theme.colors.text }]}>TextCube</Text>
-                    <View style={[styles.line, { backgroundColor: theme.dark ? '#333' : '#EDEDEF' }]} />
+                    <View style={styles.titleContainer}>
+                        <Text style={[styles.title, { color: theme.colors.text }]}>TextCube</Text>
+                    </View>
+                    <View style={[styles.line, { backgroundColor: theme.dark ? '#666' : '#eee' }]} />
 
                     <TouchableOpacity onPress={() => { router.push("/"); onClose(); }}>
                         <View style={[styles.item, styles.firstItem]}>
@@ -82,7 +84,6 @@ const styles = StyleSheet.create({
     drawer: {
         width: 300,
         height: "100%",
-        backgroundColor: "white",
         paddingLeft: 16,
         elevation: 22,
         shadowColor: "#000",
@@ -90,17 +91,20 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 4,
     },
+    titleContainer: {
+        height: 67,
+        // backgroundColor: "yellow"
+    },
     title: {
         fontSize: 24,
         fontWeight: "bold",
         marginTop: 16,
+        // backgroundColor: "pink",
     },
     line: {
         height: 1,
-        backgroundColor: "#EDEDEF",
         width: 300,
         left: -16,
-        marginTop: 16,
     },
     firstItem: {
         marginTop: 8,

@@ -108,13 +108,13 @@ const styles = StyleSheet.create({
     // backgroundColor: "#00FF0080", 
   },
   scroll: {
-    width: "85%",
+    width: "77%",
     height: "65%",
-    marginLeft: "5%",
-    marginTop: "42.1%",
+    marginLeft: 32,
+    marginTop: "42.3%",
     flexGrow: 0,
     flexDirection: "column-reverse",
-    backgroundColor: "#ff00ff80",
+    // backgroundColor: "#ff00ff80",
   },
   scrollContent: {
     // backgroundColor: "green",

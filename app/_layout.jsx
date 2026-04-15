@@ -20,6 +20,13 @@ function AppLayoutContent() {
     const isAddTextLibrary = pathname === "/AddTextLibrary";
     const { theme } = useTheme();
 
+    let pageTitle = "";
+    if (pathname === "/TextLibrary") {
+        pageTitle = "文字庫";
+    } else if (pathname === "/Setting") {
+        pageTitle = "設定";
+    }
+
     const navigationTheme = {
         ...DefaultTheme,
         dark: theme.dark,
@@ -39,7 +46,7 @@ function AppLayoutContent() {
                         <NavBar onMenuPress={() => setIsMenuOpen(true)} />
                     ) : (
                         <View style={isAddTextLibrary ? [styles.absoluteHeader, { top: insets.top }] : {}}>
-                            <BackTopBar />
+                        <BackTopBar title={pageTitle} />
                         </View>
                     )}
                     <View style={styles.content}>
@@ -48,6 +55,7 @@ function AppLayoutContent() {
                             <Stack.Screen name="AddTextLibrary" />
                             <Stack.Screen name="TextLibrary" />
                             <Stack.Screen name="Setting" />
+                            <Stack.Screen name="DevTool" />
                         </Stack>
                     </View>
                     <Drawer isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
