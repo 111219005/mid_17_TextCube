@@ -32,6 +32,10 @@ export default function AddTextLibrary() {
   const [modalCategoryId, setModalCategoryId] = useState(null);
   const [modalCategoryInput, setModalCategoryInput] = useState("");
   const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [editingCategoryTitle, setEditingCategoryTitle] = useState("");
+  const [categoryModalVisible, setCategoryModalVisible] = useState(false);
+  const [deletecategoryModalVisible, setDeleteCategoryModalVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [isCategoryVisible, setIsCategoryVisible] = useState(false);
   const isMounted = useRef(false);
@@ -48,7 +52,9 @@ export default function AddTextLibrary() {
     setCategories(
       editingLibrary.categories.length > 0
         ? editingLibrary.categories
-        : [{ id: createDraftId("category"), name: "Uncategorized" }]
+        : (editingLibrary.entries.some(entry => entry.categoryId !== null)
+            ? [{ id: createDraftId("category"), name: "Uncategorized" }]
+            : [])
     );
     setEntries(editingLibrary.entries);
     setExpandedGroups(editingLibrary.expandedGroups || {});
@@ -56,10 +62,12 @@ export default function AddTextLibrary() {
   }, [editingLibrary]);
 
   useEffect(() => {
-    if (!modalCategoryId && categories[0]?.id) {
+    // Only set modalCategoryId if it's not already set and we have categories
+    // This prevents overriding user's "No Section" choice
+    if (modalCategoryId === undefined && categories.length > 0) {
       setModalCategoryId(categories[0].id);
     }
-  }, [categories]);
+  }, [categories, modalCategoryId]);
 
   const groupedEntries = useMemo(() => {
     const noSectionItems = entries.filter((entry) => entry.categoryId === null);
@@ -196,9 +204,51 @@ export default function AddTextLibrary() {
     }, 2000);
   };
 
-  const handleCopy = async (text) => {
-    await Clipboard.setStringAsync(text);
-    showToast("已複製到剪貼簿！");
+  const handleEditCategory = (category) => {
+    setSelectedCategory(category);
+    setEditingCategoryTitle(category.name);
+    setCategoryModalVisible(true);
+  };
+
+  const handleSaveCategory = () => {
+    if (selectedCategory && editingCategoryTitle.trim()) {
+      setCategories(prevCategories =>
+        prevCategories.map(cat =>
+          cat.id === selectedCategory.id
+            ? { ...cat, name: editingCategoryTitle.trim() }
+            : cat
+        )
+      );
+      setCategoryModalVisible(false);
+      setSelectedCategory(null);
+      setEditingCategoryTitle("");
+    }
+  };
+
+  const handleDeleteCategory = () => {
+    if (selectedCategory) {
+      // Move entries from this category to "No Section" (null)
+      setEntries(prevEntries =>
+        prevEntries.map(entry =>
+          entry.categoryId === selectedCategory.id
+            ? { ...entry, categoryId: null }
+            : entry
+        )
+      );
+      // Remove the category
+      setCategories(prevCategories =>
+        prevCategories.filter(cat => cat.id !== selectedCategory.id)
+      );
+      // Remove from expandedGroups
+      setExpandedGroups(prev => {
+        const newExpanded = { ...prev };
+        delete newExpanded[selectedCategory.id];
+        return newExpanded;
+      });
+      setCategoryModalVisible(false);
+      setSelectedCategory(null);
+      setEditingCategoryTitle("");
+    }
   };
 
   const handleSave = useCallback(() => {
@@ -317,7 +367,7 @@ export default function AddTextLibrary() {
                   <View style={styles.groupTitleContainer}>
                     <Text style={[styles.groupTitle, { color: theme.colors.text }]}>{group.name}</Text>
                     <View style={styles.groupTitleiconRow}>
-                      <TouchableOpacity style={styles.groupTitleicon}>
+                      <TouchableOpacity style={styles.groupTitleicon} onPress={() => handleEditCategory(group)}>
                         <Feather name="more-horizontal" size={24} color={theme.colors.text} />
                       </TouchableOpacity>
                       <TouchableOpacity style={styles.groupTitleicon} onPress={() => {
@@ -330,7 +380,7 @@ export default function AddTextLibrary() {
                 )}
                 {group.items.length === 0 ? null : (
                   expandedGroups[group.id] && (
-                    <View style={group.id === "no-section" ? styles.noSectionContainer : {}}>
+                    <View style={group.id === "no-section" ? styles.noSectionContainer : styles.categoryContainer}>
                       {group.items.map((item) => (
                         <TouchableOpacity key={item.id} style={[styles.entryButton, { backgroundColor: theme.colors.card, borderColor: theme.colors.borderColor }]} onPress={() => handleCopy(item.text)}>
                           <Text style={[styles.entryButtonText, { color: theme.colors.text }]}>
@@ -454,11 +504,35 @@ export default function AddTextLibrary() {
         </Pressable>
       </Modal>
 
-      {toastMessage ? (
-        <View style={styles.toastContainer}>
-          <Text style={styles.toastText}>{toastMessage}</Text>
-        </View>
-      ) : null}
+      <Modal transparent visible={categoryModalVisible && !deletecategoryModalVisible} animationType="fade">
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setCategoryModalVisible(false)}
+        >
+          <Pressable style={styles.categoryModalCard} onPress={() => {}}>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity style={styles.modalOption} onPress={() => {
+                setCategoryModalVisible(false);
+              }}>
+                <Text style={styles.modalOptionText}>取消</Text>
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>編輯段落標題</Text>
+              <TouchableOpacity style={styles.modalOption} onPress={handleSaveCategory}>
+                <Text style={styles.modalOptionText}>儲存</Text>
+              </TouchableOpacity>
+            </View>
+            <TextInput
+              value={editingCategoryTitle}
+              onChangeText={setEditingCategoryTitle}
+              style={styles.modalInput}
+              placeholder="輸入新標題"
+            />
+            <TouchableOpacity style={styles.modalOption} onPress={handleDeleteCategory}>
+              <Text style={[styles.modalOptionText, { color: 'red' }]}>刪除段落標題</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -601,9 +675,17 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   noSectionContainer: {
+    backgroundColor: "#6d7a86",
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
+    justifyContent: 'flex-start',
+  },
+  categoryContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    justifyContent: 'flex-start',
   },
   groupTitleContainer: {
     flexDirection: "row",
@@ -662,6 +744,45 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 22,
     paddingBottom: 36,
+  },
+  categoryModalCard: {
+    backgroundColor: "#fff9f0",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: 20,
+    paddingTop: 22,
+    paddingBottom: 36,
+    width: "100%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  modalTitle: {
+    textAlign: "center",
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#1b3147",
+    flex: 1,
+  },
+  modalInput: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#d8c9b8",
+    backgroundColor: "#fffdf9",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    color: "#24384c",
+    marginBottom: 16,
+  },
+  modalOption: {
+    paddingVertical: 12,
+  },
+  modalOptionText: {
+    fontSize: 16,
+    color: "#1b3147",
   },
   modalTitle: {
     fontSize: 22,

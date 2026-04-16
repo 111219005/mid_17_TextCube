@@ -56,6 +56,12 @@ const useTextLibraryStore = create(
 
       getLibraryById: (id) => get().libraries.find((library) => library.id === id) ?? null,
       
+      deleteLibrary: (id) => {
+        set((state) => ({
+          libraries: state.libraries.filter((library) => library.id !== id),
+        }));
+      },
+      
       clearAllLibraries: () => set({ libraries: [] }),
     }),
     {
@@ -73,6 +79,7 @@ export function useTextLibraries() {
   const libraries = useTextLibraryStore((state) => state.libraries);
   const saveLibrary = useTextLibraryStore((state) => state.saveLibrary);
   const getLibraryById = useTextLibraryStore((state) => state.getLibraryById);
+  const deleteLibrary = useTextLibraryStore((state) => state.deleteLibrary);
   const clearAllLibraries = useTextLibraryStore((state) => state.clearAllLibraries);
 
   const recentEntries = useMemo(
@@ -97,6 +104,7 @@ export function useTextLibraries() {
     libraries,
     saveLibrary,
     getLibraryById,
+    deleteLibrary,
     clearAllLibraries,
     recentEntries,
   };

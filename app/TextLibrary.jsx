@@ -9,9 +9,10 @@ const DEFAULT_IMAGE = require("../assets/image/sakura.jpg");
 
 export default function TextLibraries() {
   const router = useRouter();
-  const { libraries, saveLibrary } = useTextLibraries();
+  const { libraries, saveLibrary, deleteLibrary } = useTextLibraries();
   const { theme } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [selectedLibrary, setSelectedLibrary] = useState(null);
   const [editingTitle, setEditingTitle] = useState("");
   
@@ -67,13 +68,31 @@ export default function TextLibraries() {
           )}
         </ScrollView>
 
-        <Modal transparent visible={modalVisible} animationType="fade">
+        <Modal transparent visible={modalVisible && !deleteModalVisible} animationType="fade">
           <Pressable
             style={styles.modalOverlay}
             onPress={() => setModalVisible(false)}
           >
             <Pressable style={styles.modalCard} onPress={() => {}}>
-              <Text style={styles.modalTitle}>編輯文字庫</Text>
+              <View style={styles.modalHeader}>
+                <TouchableOpacity style={styles.modalOption} onPress={() => { 
+                  setModalVisible(false); 
+                }}>
+                  <Text style={styles.modalOptionText}>取消</Text>
+                </TouchableOpacity>
+                <Text style={styles.modalTitle}>編輯文字庫</Text>
+                <TouchableOpacity style={styles.modalOption} onPress={() => { 
+                  if (selectedLibrary) {
+                    saveLibrary({
+                      ...selectedLibrary,
+                      title: editingTitle.trim() || selectedLibrary.title,
+                    });
+                  }
+                  setModalVisible(false); 
+                }}>
+                  <Text style={styles.modalOptionText}>儲存</Text>
+                </TouchableOpacity>
+              </View>
               <TextInput
                 value={editingTitle}
                 onChangeText={setEditingTitle}
@@ -81,19 +100,39 @@ export default function TextLibraries() {
                 placeholder="輸入新標題"
               />
               <TouchableOpacity style={styles.modalOption} onPress={() => { 
-                if (selectedLibrary) {
-                  saveLibrary({
-                    ...selectedLibrary,
-                    title: editingTitle.trim() || selectedLibrary.title,
-                  });
-                }
-                setModalVisible(false); 
+                setDeleteModalVisible(true);
               }}>
-                <Text style={styles.modalOptionText}>儲存</Text>
+                <Text style={[styles.modalOptionText, { color: 'red' }]}>刪除文字庫</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.modalOption} onPress={() => { /* Delete logic */ setModalVisible(false); }}>
-                <Text style={[styles.modalOptionText, { color: 'red' }]}>刪除</Text>
-              </TouchableOpacity>
+              
+            </Pressable>
+          </Pressable>
+        </Modal>
+
+        <Modal transparent visible={deleteModalVisible} animationType="fade">
+          <Pressable
+            style={styles.modalOverlay}
+            onPress={() => setDeleteModalVisible(false)}
+          >
+            <Pressable style={styles.deleteModalCard} onPress={() => {}}>
+              <Text style={styles.deleteModalTitle}>刪除文字庫</Text>
+              <View style={styles.deleteModalButtonsContainer}>
+                <TouchableOpacity style={styles.deleteConfirmButton} onPress={() => {
+                  if (selectedLibrary) {
+                    deleteLibrary(selectedLibrary.id);
+                  }
+                  setDeleteModalVisible(false);
+                  setModalVisible(false);
+                }}>
+                  <Text style={[styles.modalOptionText, { color: 'red', textAlign: 'center' }]}>確認刪除</Text>
+                </TouchableOpacity>
+                <View style={styles.deleteModalDivider} />
+                <TouchableOpacity style={styles.deleteCancelButton} onPress={() => { 
+                  setDeleteModalVisible(false);
+                }}>
+                  <Text style={[styles.modalOptionText, { textAlign: 'center' }]}>取消</Text>
+                </TouchableOpacity>
+              </View>
             </Pressable>
           </Pressable>
         </Modal>
@@ -206,12 +245,18 @@ const styles = StyleSheet.create({
     paddingBottom: 36,
     width: "80%",
   },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
   modalTitle: {
     textAlign: "center",
     fontSize: 22,
     fontWeight: "800",
     color: "#1b3147",
-    marginBottom: 16,
+    flex: 1,
   },
   modalInput: {
     borderRadius: 16,
@@ -229,5 +274,42 @@ const styles = StyleSheet.create({
   modalOptionText: {
     fontSize: 16,
     color: "#1b3147",
+  },
+  deleteModalCard: {
+    backgroundColor: "#fff9f0",
+    borderRadius: 28,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+    width: "80%",
+    overflow: "hidden",
+  },
+  deleteModalTitle: {
+    textAlign: "center",
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#1b3147",
+    paddingHorizontal: 20,
+    paddingTop: 28,
+    paddingBottom: 16,
+  },
+  deleteModalButtonsContainer: {
+    flexDirection: "row",
+  },
+  deleteConfirmButton: {
+    flex: 1,
+    paddingVertical: 25,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  deleteModalDivider: {
+    width: 1,
+    backgroundColor: "#e5d7c7",
+    height: "100%",
+  },
+  deleteCancelButton: {
+    flex: 1,
+    paddingVertical: 25,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
