@@ -1,5 +1,5 @@
 import * as SplashScreen from "expo-splash-screen";
-import { StatusBar, StyleSheet, View, TouchableOpacity, Text, Image } from "react-native";
+import { StyleSheet, View, TouchableOpacity, Text, Image,  ScrollView } from "react-native";
 import { useEffect, useMemo, useState } from "react";
 import ImageUploadBox from "../components/ImageUploadBox.jsx";
 import { useRouter } from "expo-router";
@@ -53,7 +53,6 @@ export default function Page() {
 
   return (
     <>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" />
       <View style={styles.container}>
         <View style={styles.main}>
           <ImageUploadBox />
@@ -135,19 +134,11 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   stackCard: {
-    paddingVertical: 5,
     // backgroundColor: "#00ff0080",
   },
   stackText: {
     fontSize: 18,
     lineHeight: 26,
-    color: "#24384c",
-  },
-  stackImage: {
-    width: "100%",
-    height: 120,
-    borderRadius: 18,
-    marginTop: 14,
   },
   toastContainer: {
     position: 'absolute',
