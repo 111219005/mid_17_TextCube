@@ -11,6 +11,7 @@ import BackTopBar from "../components/BackTopBar.jsx";
 import BackgroundImage from "../components/BackgroundImage.jsx";
 import { ThemeProvider as CustomThemeProvider, useTheme } from '../context/ThemeContext';
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
+import { StatusBar } from "react-native";
 
 function AppLayoutContent() {
     const insets = useSafeAreaInsets();
@@ -18,7 +19,7 @@ function AppLayoutContent() {
     const pathname = usePathname();
     const isHomePage = pathname === "/";
     const isAddTextLibrary = pathname === "/AddTextLibrary";
-    const { theme } = useTheme();
+    const { theme, isDark } = useTheme();
 
     let pageTitle = "";
     if (pathname === "/TextLibrary") {
@@ -39,29 +40,36 @@ function AppLayoutContent() {
     };
 
     return (
-        <NavThemeProvider value={navigationTheme}>
-            <BackgroundImage>
-                <View style={[styles.container, { paddingTop: insets.top }]}>
-                    {isHomePage ? (
-                        <NavBar onMenuPress={() => setIsMenuOpen(true)} />
-                    ) : (
-                        <View style={isAddTextLibrary ? [styles.absoluteHeader, { top: insets.top }] : {}}>
-                        <BackTopBar title={pageTitle} />
+        <>
+            <StatusBar
+                barStyle={isDark ? "light-content" : "dark-content"}
+                backgroundColor={isDark ? "#000000" : "#FFFFFF"}
+                translucent={true}
+            />
+            <NavThemeProvider value={navigationTheme}>
+                <BackgroundImage>
+                    <View style={[styles.container, { paddingTop: insets.top }]}>
+                        {isHomePage ? (
+                            <NavBar onMenuPress={() => setIsMenuOpen(true)} />
+                        ) : (
+                            <View style={isAddTextLibrary ? [styles.absoluteHeader, { top: insets.top }] : {}}>
+                                <BackTopBar title={pageTitle} />
+                            </View>
+                        )}
+                        <View style={styles.content}>
+                            <Stack screenOptions={{ headerShown: false }}>
+                                <Stack.Screen name="index" />
+                                <Stack.Screen name="AddTextLibrary" />
+                                <Stack.Screen name="TextLibrary" />
+                                <Stack.Screen name="Setting" />
+                                <Stack.Screen name="DevTool" />
+                            </Stack>
                         </View>
-                    )}
-                    <View style={styles.content}>
-                        <Stack screenOptions={{ headerShown: false }}>
-                            <Stack.Screen name="index" />
-                            <Stack.Screen name="AddTextLibrary" />
-                            <Stack.Screen name="TextLibrary" />
-                            <Stack.Screen name="Setting" />
-                            <Stack.Screen name="DevTool" />
-                        </Stack>
+                        <Drawer isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
                     </View>
-                    <Drawer isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
-                </View>
-            </BackgroundImage>
-        </NavThemeProvider>
+                </BackgroundImage>
+            </NavThemeProvider>
+        </>
     );
 }
 
