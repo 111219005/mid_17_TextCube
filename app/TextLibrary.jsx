@@ -15,128 +15,100 @@ export default function TextLibraries() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [selectedLibrary, setSelectedLibrary] = useState(null);
   const [editingTitle, setEditingTitle] = useState("");
-  
 
-  return (      
-      <View style={[styles.container]}>
-        <ScrollView
-          style={styles.screen}
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.header}>
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => router.push("/AddTextLibrary")}
-            >
-              <Feather name="plus" size={18} color="#fff" />
-              <Text style={styles.addButtonText}>New</Text>
-            </TouchableOpacity>
-          </View>
 
-          {libraries.length === 0 ? (
-            <View style={styles.emptyCard}>
-              <Text style={styles.emptyTitle}>No libraries yet</Text>
-              <Text style={styles.emptyDescription}>
-                Create your first library and it will show up here with its banner and preview.
-              </Text>
-            </View>
-          ) : (
-            libraries.map((library) => (
-              <TouchableOpacity
-                key={library.id}
-                style={styles.card}
-                onPress={() => router.push(`/AddTextLibrary?id=${library.id}`)}
-              >
-                <Image
-                  source={library.bannerUri ? { uri: library.bannerUri } : DEFAULT_IMAGE}
-                  style={styles.cardImage}
-                />
-                <View style={styles.cardBody}>
-                  <View style={styles.titleRow}>
-                    <Text style={styles.cardTitle}>{library.title}</Text>
-                    <TouchableOpacity style={styles.groupTitleicon} onPress={() => { setSelectedLibrary(library); setEditingTitle(library.title); setModalVisible(true); }}>
-                      <Feather name="more-horizontal" size={24} color={theme.colors.text} />
-                    </TouchableOpacity>
-                  </View>
-                  <Text style={styles.cardMeta}>
-                    {library.categories.length} sections / {library.entries.length} entries
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))
-          )}
-        </ScrollView>
-
-        <Modal transparent visible={modalVisible && !deleteModalVisible} animationType="fade">
-          <Pressable
-            style={styles.modalOverlay}
-            onPress={() => setModalVisible(false)}
+  return (
+    <View style={[styles.container]}>
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={[styles.addButton, { backgroundColor: theme.colors.text}]}
+            onPress={() => router.push("/AddTextLibrary")}
           >
-            <Pressable style={styles.modalCard} onPress={() => {}}>
-              <View style={styles.modalHeader}>
-                <TouchableOpacity style={styles.modalOption} onPress={() => { 
-                  setModalVisible(false); 
+            <Feather name="plus" size={18} color={theme.colors.card} />
+            <Text style={{ color: theme.colors.card}}>New</Text>
+          </TouchableOpacity>
+        </View>
+
+        {libraries.length === 0 ? (
+          <View style={[styles.emptyCard, { backgroundColor: theme.colors.card }]}>
+            <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>尚未建立任何文字庫。</Text>
+          </View>
+        ) : (
+          libraries.map((library) => (
+            <TouchableOpacity
+              key={library.id}
+              style={[styles.card, { backgroundColor: theme.colors.card, borderColor: theme.colors.primary }]}
+              onPress={() => router.push(`/AddTextLibrary?id=${library.id}`)}
+            >
+              <Image
+                source={library.bannerUri ? { uri: library.bannerUri } : DEFAULT_IMAGE}
+                style={styles.cardImage}
+              />
+              <View style={styles.cardBody}>
+                <View style={styles.titleRow}>
+                  <Text style={[styles.cardTitle, { color: theme.colors.text }]}>{library.title}</Text>
+                  <TouchableOpacity style={styles.groupTitleicon} onPress={() => { setSelectedLibrary(library); setEditingTitle(library.title); setModalVisible(true); }}>
+                    <Feather name="more-horizontal" size={24} color={theme.colors.text} />
+                  </TouchableOpacity>
+                </View>
+                <Text style={[styles.cardMeta]}>
+                  {library.categories.length} 個段落標題 / {library.entries.length} 個文字方塊
+                </Text>
+              </View>
+            </TouchableOpacity>
+          ))
+        )}
+      </ScrollView>
+
+      <Modal transparent visible={modalVisible && !deleteModalVisible} animationType="fade">
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setModalVisible(false)}
+        >
+          <Pressable style={[styles.modalCard, { backgroundColor: theme.colors.card }]} onPress={() => { }}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>編輯文字庫標題</Text>
+            </View>
+            <TextInput
+              value={editingTitle}
+              onChangeText={setEditingTitle}
+              style={[styles.modalInput, { backgroundColor: theme.colors.borderColor, borderColor: theme.colors.primary, color: theme.colors.text }]}
+              placeholder="輸入新標題"
+            />
+            <View style={styles.modalOptionBottons}>
+              <TouchableOpacity style={styles.modalOption} onPress={() => {
+                setDeleteModalVisible(true);
+              }}>
+                <Text style={[styles.modalOptionText, { color: 'red' }]}>刪除文字庫</Text>
+              </TouchableOpacity>
+              <View style={styles.deleteandCancel}>
+                <TouchableOpacity style={styles.modalOption} onPress={() => {
+                  setModalVisible(false);
                 }}>
                   <Text style={styles.modalOptionText}>取消</Text>
                 </TouchableOpacity>
-                <Text style={styles.modalTitle}>編輯文字庫</Text>
-                <TouchableOpacity style={styles.modalOption} onPress={() => { 
+                <TouchableOpacity style={styles.modalOption} onPress={() => {
                   if (selectedLibrary) {
                     saveLibrary({
                       ...selectedLibrary,
                       title: editingTitle.trim() || selectedLibrary.title,
                     });
                   }
-                  setModalVisible(false); 
+                  setModalVisible(false);
                 }}>
                   <Text style={styles.modalOptionText}>儲存</Text>
                 </TouchableOpacity>
               </View>
-              <TextInput
-                value={editingTitle}
-                onChangeText={setEditingTitle}
-                style={styles.modalInput}
-                placeholder="輸入新標題"
-              />
-              <TouchableOpacity style={styles.modalOption} onPress={() => { 
-                setDeleteModalVisible(true);
-              }}>
-                <Text style={[styles.modalOptionText, { color: 'red' }]}>刪除文字庫</Text>
-              </TouchableOpacity>
-              
-            </Pressable>
+            </View>
           </Pressable>
-        </Modal>
-
-        <Modal transparent visible={deleteModalVisible} animationType="fade">
-          <Pressable
-            style={styles.modalOverlay}
-            onPress={() => setDeleteModalVisible(false)}
-          >
-            <Pressable style={styles.deleteModalCard} onPress={() => {}}>
-              <Text style={styles.deleteModalTitle}>刪除文字庫</Text>
-              <View style={styles.deleteModalButtonsContainer}>
-                <TouchableOpacity style={styles.deleteConfirmButton} onPress={() => {
-                  if (selectedLibrary) {
-                    deleteLibrary(selectedLibrary.id);
-                  }
-                  setDeleteModalVisible(false);
-                  setModalVisible(false);
-                }}>
-                  <Text style={[styles.modalOptionText, { color: 'red', textAlign: 'center' }]}>確認刪除</Text>
-                </TouchableOpacity>
-                <View style={styles.deleteModalDivider} />
-                <TouchableOpacity style={styles.deleteCancelButton} onPress={() => { 
-                  setDeleteModalVisible(false);
-                }}>
-                  <Text style={[styles.modalOptionText, { textAlign: 'center' }]}>取消</Text>
-                </TouchableOpacity>
-              </View>
-            </Pressable>
-          </Pressable>
-        </Modal>
-      </View>
+        </Pressable>
+      </Modal>
+    </View>
   );
 }
 
@@ -144,19 +116,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  screen: {    
+  screen: {
     width: "100%",
     height: "100%",
     // backgroundColor: "#ff000080",
   },
   content: {
-    padding: 20,
-    paddingTop: 28,
+    paddingHorizontal: 16,
     paddingBottom: 40,
   },
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
     alignItems: "flex-start",
     marginBottom: 22,
     gap: 12,
@@ -175,28 +146,17 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   emptyCard: {
-    backgroundColor: "#fffaf4",
-    borderRadius: 24,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#e5d7c7",
     padding: 20,
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: "800",
-    color: "#24384c",
-    marginBottom: 8,
-  },
-  emptyDescription: {
-    color: "#6d7a86",
-    lineHeight: 22,
   },
   card: {
     overflow: "hidden",
-    borderRadius: 28,
-    backgroundColor: "#fffaf4",
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#e5d7c7",
     marginBottom: 16,
   },
   cardImage: {
@@ -204,13 +164,11 @@ const styles = StyleSheet.create({
     height: 180,
   },
   cardBody: {
-    padding: 18,
+    padding: 15,
   },
   cardTitle: {
     fontSize: 21,
-    fontWeight: "800",
-    color: "#1b3147",
-    // marginBottom: 6,
+    fontWeight: "600",
   },
   groupTitleicon: {
     width: 32,
@@ -223,9 +181,9 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   cardMeta: {
-    color: "#a06034",
-    fontWeight: "700",
-    //marginBottom: 10,
+    color: "#919191",
+    fontSize: 14,
+    // fontWeight: "700",
   },
   cardPreview: {
     color: "#667787",
@@ -233,16 +191,15 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(16, 25, 35, 0.45)",
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
     justifyContent: "center",
     alignItems: "center",
   },
   modalCard: {
     backgroundColor: "#fff9f0",
-    borderRadius: 28,
+    borderRadius: 8,
     paddingHorizontal: 20,
-    paddingTop: 22,
-    paddingBottom: 36,
+    paddingVertical: 30,
     width: "80%",
   },
   modalHeader: {
@@ -259,14 +216,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   modalInput: {
-    borderRadius: 16,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#d8c9b8",
-    backgroundColor: "#fffdf9",
     paddingHorizontal: 14,
     paddingVertical: 12,
-    color: "#24384c",
     marginBottom: 16,
+  },
+  modalOptionBottons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  deleteandCancel: {
+    flexDirection: "row",
+    gap: 15,
   },
   modalOption: {
     paddingVertical: 12,

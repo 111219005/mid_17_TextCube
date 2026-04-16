@@ -11,7 +11,6 @@ export default function Settings() {
 
     return (
         <View style={[styles.container, { borderTopColor: theme.dark ? '#eee' : '#666' }]}>
-
             <View style={[styles.settingItem, { borderColor: theme.dark ? '#eee' : '#666' }]}>
                 <Text style={[styles.settingText, { color: theme.colors.text }]}>深色模式。</Text>
                 <Switch
@@ -61,6 +60,7 @@ const styles = StyleSheet.create({
     },
     settingText: {
         fontSize: 16,
+        fontWeight: '500',
     },
     button: {
         paddingHorizontal: 20,

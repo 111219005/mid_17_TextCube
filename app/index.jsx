@@ -1,6 +1,6 @@
 import * as SplashScreen from "expo-splash-screen";
-import { StyleSheet, View, TouchableOpacity, Text, Image,  ScrollView } from "react-native";
-import { useEffect, useMemo, useState } from "react";
+import { StyleSheet, View, TouchableOpacity, Text, Image, ScrollView } from "react-native";
+import { useEffect, useMemo, useState, useRef } from "react";
 import ImageUploadBox from "../components/ImageUploadBox.jsx";
 import { useRouter } from "expo-router";
 import { useTextLibraries } from "../components/TextLibraryContext.jsx";
@@ -13,11 +13,11 @@ export default function Page() {
 
   const router = useRouter();
   const { recentEntries } = useTextLibraries();
-  const latestEntries = useMemo(() => recentEntries.slice(0, 6).reverse(), [recentEntries]);
+  const latestEntries = useMemo(() => recentEntries.slice(-20).reverse(), [recentEntries]);
   const { theme } = useTheme();
-  
   const [appIsReady, setAppIsReady] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const scrollRef = useRef(null);
 
   useEffect(() => {
     async function prepare() {
@@ -57,30 +57,25 @@ export default function Page() {
         <View style={styles.main}>
           <ImageUploadBox />
           <View style={styles.lastEntriesContainer}>
-            <View style={styles.scroll}>
-              <View style={styles.feedSection}>
-                <View style={styles.stackArea}>
-                  {latestEntries.map((entry, index) => {
-                    const offset = (latestEntries.length - index - 1) * 18;
-                    return (
-                      <TouchableOpacity
-                        key={`${entry.libraryId}-${entry.id}`}
-                        style={[
-                          styles.stackCard,
-                          {
-                            marginTop: index === 0 ? 0 : 18,
-                            transform: [{ translateY: offset }],
-                          },
-                        ]}
-                        onPress={() => handleCopy(entry.text)}
-                      >
-                        <Text style={[styles.stackText, { color: theme.colors.text }]}>{entry.text}</Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </View>
-            </View>
+            <ScrollView
+              ref={scrollRef}
+              style={styles.scroll}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+              onContentSizeChange={() =>
+                scrollRef.current?.scrollToEnd({ animated: true })
+              }
+            >
+              {latestEntries.map((entry) => (
+                <TouchableOpacity
+                  key={`${entry.libraryId}-${entry.id}`}
+                  style={styles.stackCard}
+                  onPress={() => handleCopy(entry.text)}
+                >
+                  <Text style={[styles.stackText, { color: theme.colors.text }]}>{entry.text}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
         </View>
 
@@ -113,24 +108,18 @@ const styles = StyleSheet.create({
     width: "65%",
     height: "100%",
     alignItems: "flex-start",
+    justifyContent: "center",
     // backgroundColor: "#00FF0080", 
   },
   scroll: {
     width: "77%",
-    height: "65%",
+    maxHeight: "65%",
     marginLeft: 32,
-    marginTop: "42.3%",
-    flexDirection: "column-reverse",
+    marginBottom: "25%",
     // backgroundColor: "#ff00ff80",
   },
   scrollContent: {
-    // backgroundColor: "green",
-  },
-  feedSection: {
-    
-    // backgroundColor: "#0000ff80",
-  },
-  stackArea: {
+    flexDirection: "column",
     gap: 10,
   },
   stackCard: {
@@ -139,6 +128,7 @@ const styles = StyleSheet.create({
   stackText: {
     fontSize: 18,
     lineHeight: 26,
+    fontWeight: "500",
   },
   toastContainer: {
     position: 'absolute',
