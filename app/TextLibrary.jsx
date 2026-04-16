@@ -1,13 +1,19 @@
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, Modal, Pressable, TextInput } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import { useRouter } from "expo-router";
 import { useTextLibraries } from "../components/TextLibraryContext.jsx";
+import { useTheme } from "../context/ThemeContext";
+import { useState } from "react";
 
 const DEFAULT_IMAGE = require("../assets/image/sakura.jpg");
 
 export default function TextLibraries() {
   const router = useRouter();
-  const { libraries } = useTextLibraries();
+  const { libraries, saveLibrary } = useTextLibraries();
+  const { theme } = useTheme();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedLibrary, setSelectedLibrary] = useState(null);
+  const [editingTitle, setEditingTitle] = useState("");
   
 
   return (      
@@ -46,18 +52,51 @@ export default function TextLibraries() {
                   style={styles.cardImage}
                 />
                 <View style={styles.cardBody}>
-                  <Text style={styles.cardTitle}>{library.title}</Text>
+                  <View style={styles.titleRow}>
+                    <Text style={styles.cardTitle}>{library.title}</Text>
+                    <TouchableOpacity style={styles.groupTitleicon} onPress={() => { setSelectedLibrary(library); setEditingTitle(library.title); setModalVisible(true); }}>
+                      <Feather name="more-horizontal" size={24} color={theme.colors.text} />
+                    </TouchableOpacity>
+                  </View>
                   <Text style={styles.cardMeta}>
                     {library.categories.length} sections / {library.entries.length} entries
-                  </Text>
-                  <Text numberOfLines={2} style={styles.cardPreview}>
-                    {library.entries[0]?.text ?? "Open this library to add your first entry."}
                   </Text>
                 </View>
               </TouchableOpacity>
             ))
           )}
         </ScrollView>
+
+        <Modal transparent visible={modalVisible} animationType="fade">
+          <Pressable
+            style={styles.modalOverlay}
+            onPress={() => setModalVisible(false)}
+          >
+            <Pressable style={styles.modalCard} onPress={() => {}}>
+              <Text style={styles.modalTitle}>編輯文字庫</Text>
+              <TextInput
+                value={editingTitle}
+                onChangeText={setEditingTitle}
+                style={styles.modalInput}
+                placeholder="輸入新標題"
+              />
+              <TouchableOpacity style={styles.modalOption} onPress={() => { 
+                if (selectedLibrary) {
+                  saveLibrary({
+                    ...selectedLibrary,
+                    title: editingTitle.trim() || selectedLibrary.title,
+                  });
+                }
+                setModalVisible(false); 
+              }}>
+                <Text style={styles.modalOptionText}>儲存</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalOption} onPress={() => { /* Delete logic */ setModalVisible(false); }}>
+                <Text style={[styles.modalOptionText, { color: 'red' }]}>刪除</Text>
+              </TouchableOpacity>
+            </Pressable>
+          </Pressable>
+        </Modal>
       </View>
   );
 }
@@ -132,15 +171,63 @@ const styles = StyleSheet.create({
     fontSize: 21,
     fontWeight: "800",
     color: "#1b3147",
+    // marginBottom: 6,
+  },
+  groupTitleicon: {
+    width: 32,
+    height: 32,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 6,
   },
   cardMeta: {
     color: "#a06034",
     fontWeight: "700",
-    marginBottom: 10,
+    //marginBottom: 10,
   },
   cardPreview: {
     color: "#667787",
     lineHeight: 22,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(16, 25, 35, 0.45)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalCard: {
+    backgroundColor: "#fff9f0",
+    borderRadius: 28,
+    paddingHorizontal: 20,
+    paddingTop: 22,
+    paddingBottom: 36,
+    width: "80%",
+  },
+  modalTitle: {
+    textAlign: "center",
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#1b3147",
+    marginBottom: 16,
+  },
+  modalInput: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#d8c9b8",
+    backgroundColor: "#fffdf9",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    color: "#24384c",
+    marginBottom: 16,
+  },
+  modalOption: {
+    paddingVertical: 12,
+  },
+  modalOptionText: {
+    fontSize: 16,
+    color: "#1b3147",
   },
 });

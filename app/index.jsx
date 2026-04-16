@@ -1,6 +1,6 @@
 import * as SplashScreen from "expo-splash-screen";
-import { StatusBar, StyleSheet, View, TouchableOpacity, Text, Image, ScrollView } from "react-native";
-import { useEffect, useState } from "react";
+import { StatusBar, StyleSheet, View, TouchableOpacity, Text, Image } from "react-native";
+import { useEffect, useMemo, useState } from "react";
 import ImageUploadBox from "../components/ImageUploadBox.jsx";
 import { useRouter } from "expo-router";
 import { useTextLibraries } from "../components/TextLibraryContext.jsx";
@@ -13,7 +13,7 @@ export default function Page() {
 
   const router = useRouter();
   const { recentEntries } = useTextLibraries();
-  const latestEntries = recentEntries.slice(0, 6).reverse();
+  const latestEntries = useMemo(() => recentEntries.slice(0, 6).reverse(), [recentEntries]);
   const { theme } = useTheme();
   
   const [appIsReady, setAppIsReady] = useState(false);
@@ -58,18 +58,14 @@ export default function Page() {
         <View style={styles.main}>
           <ImageUploadBox />
           <View style={styles.lastEntriesContainer}>
-            <ScrollView
-              style={styles.scroll}
-              contentContainerStyle={styles.scrollContent}
-              showsVerticalScrollIndicator={false}
-            >
+            <View style={styles.scroll}>
               <View style={styles.feedSection}>
                 <View style={styles.stackArea}>
                   {latestEntries.map((entry, index) => {
                     const offset = (latestEntries.length - index - 1) * 18;
                     return (
                       <TouchableOpacity
-                      key={`${entry.libraryId}-${entry.id}`}
+                        key={`${entry.libraryId}-${entry.id}`}
                         style={[
                           styles.stackCard,
                           {
@@ -77,16 +73,15 @@ export default function Page() {
                             transform: [{ translateY: offset }],
                           },
                         ]}
-                      onPress={() => handleCopy(entry.text)}
+                        onPress={() => handleCopy(entry.text)}
                       >
                         <Text style={[styles.stackText, { color: theme.colors.text }]}>{entry.text}</Text>
                       </TouchableOpacity>
                     );
-                  })
-                  }
+                  })}
                 </View>
               </View>
-            </ScrollView>
+            </View>
           </View>
         </View>
 
@@ -103,6 +98,7 @@ export default function Page() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    overflow: "hidden",
     // backgroundColor: "yellow"
   },
   main: {
@@ -125,7 +121,6 @@ const styles = StyleSheet.create({
     height: "65%",
     marginLeft: 32,
     marginTop: "42.3%",
-    flexGrow: 0,
     flexDirection: "column-reverse",
     // backgroundColor: "#ff00ff80",
   },

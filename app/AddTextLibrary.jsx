@@ -33,8 +33,10 @@ export default function AddTextLibrary() {
   const [modalCategoryInput, setModalCategoryInput] = useState("");
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [isCategoryVisible, setIsCategoryVisible] = useState(false);
   const isMounted = useRef(false);
   const { theme } = useTheme();
+  const [expandedGroups, setExpandedGroups] = useState({});
 
   useEffect(() => {
     if (!editingLibrary || isDataLoaded.current) {
@@ -49,6 +51,7 @@ export default function AddTextLibrary() {
         : [{ id: createDraftId("category"), name: "Uncategorized" }]
     );
     setEntries(editingLibrary.entries);
+    setExpandedGroups(editingLibrary.expandedGroups || {});
     isDataLoaded.current = true;
   }, [editingLibrary]);
 
@@ -56,16 +59,42 @@ export default function AddTextLibrary() {
     if (!modalCategoryId && categories[0]?.id) {
       setModalCategoryId(categories[0].id);
     }
-  }, [categories, modalCategoryId]);
+  }, [categories]);
 
-  const groupedEntries = useMemo(
-    () =>
-      categories.map((category) => ({
-        ...category,
-        items: entries.filter((entry) => entry.categoryId === category.id),
-      })),
-    [categories, entries]
-  );
+  const groupedEntries = useMemo(() => {
+    const noSectionItems = entries.filter((entry) => entry.categoryId === null);
+    const categorizedGroups = categories.map((category) => ({
+      ...category,
+      items: entries.filter((entry) => entry.categoryId === category.id),
+    }));
+
+    // Put No Section first if it has items
+    if (noSectionItems.length > 0) {
+      return [
+        {
+          id: "no-section",
+          name: "No Section",
+          items: noSectionItems,
+        },
+        ...categorizedGroups,
+      ];
+    }
+
+    return categorizedGroups;
+  }, [categories, entries]);
+
+  // Set default expanded state for new groups
+  useEffect(() => {
+    setExpandedGroups(prev => {
+      const newExpanded = { ...prev };
+      groupedEntries.forEach(group => {
+        if (newExpanded[group.id] === undefined) {
+          newExpanded[group.id] = true; // Default to expanded
+        }
+      });
+      return newExpanded;
+    });
+  }, [groupedEntries]);
 
   const pickImage = async () => {
     const permissionResult =
@@ -134,15 +163,17 @@ export default function AddTextLibrary() {
 
     let targetCategoryId = modalCategoryId;
 
-    // If no category is selected, and no categories exist yet, create a default one.
-    if (!targetCategoryId && categories.length === 0) {
+    // If no category is selected and no categories exist, create a default one.
+    // But if explicitly set to null (No Section), keep it as null.
+    if (targetCategoryId === undefined && categories.length === 0) {
       const newCategory = { id: createDraftId("category"), name: "Uncategorized" };
       setCategories([newCategory]);
       targetCategoryId = newCategory.id;
-    } else if (!targetCategoryId) {
+    } else if (targetCategoryId === undefined) {
       // Default to the first category if one exists but none is selected
       targetCategoryId = categories[0]?.id ?? null;
     }
+    // If targetCategoryId is explicitly null (No Section selected), keep it as null
 
     setEntries((currentEntries) => [
       ...currentEntries,
@@ -183,6 +214,7 @@ export default function AddTextLibrary() {
       bannerUri,
       categories,
       entries,
+      expandedGroups,
     });
 
     if (savedId !== currentLibraryIdRef.current) {
@@ -190,7 +222,7 @@ export default function AddTextLibrary() {
       setCurrentLibraryId(savedId);
       router.setParams({ id: savedId });
     }
-  }, [editingLibrary, title, bannerUri, categories, entries, saveLibrary, router]);
+  }, [editingLibrary, title, bannerUri, categories, entries, expandedGroups, saveLibrary, router]);
 
   // Auto-save on changes (debounced)
   useEffect(() => {
@@ -231,68 +263,83 @@ export default function AddTextLibrary() {
             placeholder="新增文字庫標題"
             style={styles.titleInput}
           />
-          <TouchableOpacity style={styles.icon} onPress={handleSave}>
+          <TouchableOpacity style={styles.icon} onPress={() => setIsCategoryVisible(!isCategoryVisible)}>
             <Feather name="tag" size={32} color={theme.colors.text} />
           </TouchableOpacity>
         </View>
 
-        <View style={styles.categorySection}>
-          <View style={styles.categoryRow}>
-            {categories.map((category) => (
-              <View key={category.id} style={styles.categoryChip}>
-                <Text style={styles.categoryChipText}>{category.name}</Text>
+        {isCategoryVisible && (
+          <View style={styles.categorySection}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.categoryRow}
+              contentContainerStyle={styles.categoryRowContent}
+            >
+              {categories.map((category) => (
+                <View key={category.id} style={styles.categoryChip}>
+                  <Text style={styles.categoryChipText}>{category.name}</Text>
+                </View>
+              ))}
+            </ScrollView>
+            {isAddingCategory ? (
+              <View style={styles.addCategoryRow}>
+                <TextInput
+                  value={categoryInput}
+                  onChangeText={setCategoryInput}
+                  placeholder="請輸入段落標題"
+                  placeholderTextColor="#7f8b96"
+                  style={styles.categoryInput}
+                  autoFocus
+                  onBlur={() => setIsAddingCategory(false)}
+                  onSubmitEditing={() => {
+                    addCategory(categoryInput);
+                    setIsAddingCategory(false);
+                  }}
+                />
               </View>
-            ))}
+            ) : (
+              <TouchableOpacity style={styles.addCategoryPrompt} onPress={() => setIsAddingCategory(true)}>
+                <Feather name="plus-circle" size={16} color="#7f8b96" />
+                <Text style={styles.addCategoryPromptText}>請輸入段落標題</Text>
+              </TouchableOpacity>
+            )}
           </View>
-          {isAddingCategory ? (
-            <View style={styles.addCategoryRow}>
-              <TextInput
-                value={categoryInput}
-                onChangeText={setCategoryInput}
-                placeholder="請輸入段落標題"
-                placeholderTextColor="#7f8b96"
-                style={styles.categoryInput}
-                autoFocus
-                onBlur={() => setIsAddingCategory(false)}
-                onSubmitEditing={() => {
-                  addCategory(categoryInput);
-                  setIsAddingCategory(false);
-                }}
-              />
-            </View>
-          ) : (
-            <TouchableOpacity style={styles.addCategoryPrompt} onPress={() => setIsAddingCategory(true)}>
-              <Feather name="plus-circle" size={16} color="#7f8b96" />
-              <Text style={styles.addCategoryPromptText}>請輸入段落標題</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+        )}
 
         <View style={styles.section}>
           {/* Save button is removed for autosave */}
 
           {entries.length === 0 ? null : (
             groupedEntries.map((group) => (
-              <View key={group.id} style={[styles.groupCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.borderColor }]}>
-                <View style={styles.groupTitleContainer}>
-                  <Text style={[styles.groupTitle, { color: theme.colors.text }]}>{group.name}</Text>
-                  <View style={styles.groupTitleiconRow}>
-                    <TouchableOpacity style={styles.groupTitleicon}>
-                      <Feather name="more-horizontal" size={24} color={theme.colors.text} />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.groupTitleicon}>
-                      <Feather name="chevron-up" size={24} color={theme.colors.text} />
-                    </TouchableOpacity>
+              <View key={group.id} style={[styles.groupCard, { backgroundColor: group.id === "no-section" ? "transparent" : theme.colors.card, borderColor: group.id === "no-section" ? "transparent" : theme.colors.borderColor, borderWidth: group.id === "no-section" ? 0 : 1 }]}>
+                {group.id !== "no-section" && (
+                  <View style={styles.groupTitleContainer}>
+                    <Text style={[styles.groupTitle, { color: theme.colors.text }]}>{group.name}</Text>
+                    <View style={styles.groupTitleiconRow}>
+                      <TouchableOpacity style={styles.groupTitleicon}>
+                        <Feather name="more-horizontal" size={24} color={theme.colors.text} />
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.groupTitleicon} onPress={() => {
+                        setExpandedGroups(prev => ({ ...prev, [group.id]: !prev[group.id] }));
+                      }}>
+                        <Feather name={expandedGroups[group.id] ? "chevron-up" : "chevron-down"} size={24} color={theme.colors.text} />
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                </View>
+                )}
                 {group.items.length === 0 ? null : (
-                  group.items.map((item) => (
-                    <TouchableOpacity key={item.id} style={[styles.entryButton, { backgroundColor: theme.colors.card, borderColor: theme.colors.borderColor }]} onPress={() => handleCopy(item.text)}>
-                      <Text style={[styles.entryButtonText, { color: theme.colors.text }]}>
-                        {item.text}
-                      </Text>
-                    </TouchableOpacity>
-                  ))
+                  expandedGroups[group.id] && (
+                    <View style={group.id === "no-section" ? styles.noSectionContainer : {}}>
+                      {group.items.map((item) => (
+                        <TouchableOpacity key={item.id} style={[styles.entryButton, { backgroundColor: theme.colors.card, borderColor: theme.colors.borderColor }]} onPress={() => handleCopy(item.text)}>
+                          <Text style={[styles.entryButtonText, { color: theme.colors.text }]}>
+                            {item.text}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )
                 )}
               </View>
             ))
@@ -302,7 +349,10 @@ export default function AddTextLibrary() {
 
       <TouchableOpacity
         style={styles.floatingButton}
-        onPress={() => setModalVisible(true)}
+        onPress={() => {
+          setModalCategoryId(null);
+          setModalVisible(true);
+        }}
       >
         <Feather name="plus" size={28} color="#fff" />
       </TouchableOpacity>
@@ -330,6 +380,22 @@ export default function AddTextLibrary() {
 
             <Text style={styles.modalSectionLabel}>Choose Section</Text>
             <View style={styles.categoryRow}>
+              <TouchableOpacity
+                style={[
+                  styles.modalCategoryChip,
+                  modalCategoryId === null && styles.modalCategoryChipActive,
+                ]}
+                onPress={() => setModalCategoryId(null)}
+              >
+                <Text
+                  style={[
+                    styles.modalCategoryChipText,
+                    modalCategoryId === null && styles.modalCategoryChipTextActive,
+                  ]}
+                >
+                  No Section
+                </Text>
+              </TouchableOpacity>
               {categories.map((category) => {
                 const selected = modalCategoryId === category.id;
                 return (
@@ -454,8 +520,10 @@ const styles = StyleSheet.create({
   },
   categoryRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
+  },
+  categoryRowContent: {
     gap: 10,
+    paddingVertical: 5,
   },
   categoryChip: {
     backgroundColor: "#2f5f88",
@@ -484,7 +552,7 @@ const styles = StyleSheet.create({
     borderColor: '#d8c9b8',
   },
   addCategoryPromptText: {
-    color: '#7f8b96',
+    color: '#967f7f',
   },
   categoryInput: {
     flex: 1,
@@ -531,6 +599,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     marginTop: 12,
+  },
+  noSectionContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
   },
   groupTitleContainer: {
     flexDirection: "row",

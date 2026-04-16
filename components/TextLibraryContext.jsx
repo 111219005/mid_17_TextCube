@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useMemo } from "react";
 
 function createId(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -20,7 +21,7 @@ const useTextLibraryStore = create(
         const entries = (draft.entries ?? []).map((entry) => ({
           id: entry.id ?? createId("entry"),
           text: entry.text.trim(),
-          categoryId: entry.categoryId ?? categories[0]?.id ?? null,
+          categoryId: entry.categoryId === null ? null : (entry.categoryId ?? categories[0]?.id ?? null),
           createdAt: entry.createdAt ?? timestamp,
         }));
 
@@ -30,6 +31,7 @@ const useTextLibraryStore = create(
           bannerUri: draft.bannerUri ?? null,
           categories,
           entries,
+          expandedGroups: draft.expandedGroups ?? {},
           createdAt: draft.createdAt ?? timestamp,
           updatedAt: timestamp,
         };
@@ -68,24 +70,34 @@ export function TextLibraryProvider({ children }) {
 }
 
 export function useTextLibraries() {
-  const store = useTextLibraryStore();
+  const libraries = useTextLibraryStore((state) => state.libraries);
+  const saveLibrary = useTextLibraryStore((state) => state.saveLibrary);
+  const getLibraryById = useTextLibraryStore((state) => state.getLibraryById);
+  const clearAllLibraries = useTextLibraryStore((state) => state.clearAllLibraries);
 
-  const recentEntries = store.libraries
-    .flatMap((library) =>
-      library.entries.map((entry) => ({
-        ...entry,
-        libraryId: library.id,
-        libraryTitle: library.title,
-        bannerUri: library.bannerUri,
-        categoryName:
-          library.categories.find((category) => category.id === entry.categoryId)
-            ?.name ?? "Uncategorized",
-      }))
-    )
-    .sort((a, b) => b.createdAt - a.createdAt);
+  const recentEntries = useMemo(
+    () =>
+      libraries
+        .flatMap((library) =>
+          library.entries.map((entry) => ({
+            ...entry,
+            libraryId: library.id,
+            libraryTitle: library.title,
+            bannerUri: library.bannerUri,
+            categoryName:
+              library.categories.find((category) => category.id === entry.categoryId)
+                ?.name ?? "Uncategorized",
+          }))
+        )
+        .sort((a, b) => b.createdAt - a.createdAt),
+    [libraries]
+  );
 
   return {
-    ...store,
+    libraries,
+    saveLibrary,
+    getLibraryById,
+    clearAllLibraries,
     recentEntries,
   };
 }

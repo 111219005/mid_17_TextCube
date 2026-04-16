@@ -1,8 +1,8 @@
-import { useRef, useState } from "react";
+import { memo, useRef, useState } from "react";
 import { Alert, Image, Modal, Platform, Pressable, StyleSheet, Text, View,} from "react-native";
 import * as ImagePicker from "expo-image-picker";
 
-export default function ImageUploadBox( ) {
+function ImageUploadBox() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [showAlert, setShowAlert] = useState(false);
   const [zoomed, setZoomed] = useState(false);
@@ -280,3 +280,5 @@ const styles = StyleSheet.create({
     height: "100%",
   },
 });
+
+export default memo(ImageUploadBox);

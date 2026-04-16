@@ -21,7 +21,7 @@ export default function Drawer({ isOpen, onClose }) {
                     </View>
                     <View style={[styles.line, { backgroundColor: theme.dark ? '#666' : '#eee' }]} />
 
-                    <TouchableOpacity onPress={() => { router.push("/"); onClose(); }}>
+                    <TouchableOpacity onPress={() => { onClose(); router.replace("/"); }}>
                         <View style={[styles.item, styles.firstItem]}>
                             <Text style={[styles.itemText, { color: theme.colors.text }]}>首頁</Text>
                         </View>

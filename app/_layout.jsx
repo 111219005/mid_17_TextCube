@@ -1,6 +1,7 @@
 import "react-native-gesture-handler";
 import { View, StyleSheet } from "react-native";
 import { Stack, usePathname } from "expo-router";
+import { enableScreens } from "react-native-screens";
 import { TextLibraryProvider } from "../components/TextLibraryContext.jsx";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useState } from "react";
@@ -11,6 +12,8 @@ import BackTopBar from "../components/BackTopBar.jsx";
 import BackgroundImage from "../components/BackgroundImage.jsx";
 import { ThemeProvider as CustomThemeProvider, useTheme } from '../context/ThemeContext';
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
+
+enableScreens();
 
 function AppLayoutContent() {
     const insets = useSafeAreaInsets();
@@ -50,7 +53,15 @@ function AppLayoutContent() {
                         </View>
                     )}
                     <View style={styles.content}>
-                        <Stack screenOptions={{ headerShown: false }}>
+                        <Stack
+                            screenOptions={{
+                                headerShown: false,
+                                animation: "none",
+                                animationEnabled: false,
+                                detachInactiveScreens: false,
+                                detachPreviousScreen: false,
+                            }}
+                        >
                             <Stack.Screen name="index" />
                             <Stack.Screen name="AddTextLibrary" />
                             <Stack.Screen name="TextLibrary" />
