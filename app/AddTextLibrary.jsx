@@ -5,6 +5,7 @@ import Feather from "@expo/vector-icons/Feather";
 import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
 import { useTextLibraries } from "../components/TextLibraryContext.jsx";
 import * as Clipboard from 'expo-clipboard';
+import { useTheme } from "../context/ThemeContext";
 
 const DEFAULT_IMAGE = require("../assets/image/sakura.jpg");
 
@@ -33,6 +34,7 @@ export default function AddTextLibrary() {
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const isMounted = useRef(false);
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (!editingLibrary || isDataLoaded.current) {
@@ -229,6 +231,9 @@ export default function AddTextLibrary() {
             placeholder="新增文字庫標題"
             style={styles.titleInput}
           />
+          <TouchableOpacity style={styles.icon} onPress={handleSave}>
+            <Feather name="tag" size={32} color={theme.colors.text} />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.categorySection}>
@@ -266,25 +271,24 @@ export default function AddTextLibrary() {
         <View style={styles.section}>
           {/* Save button is removed for autosave */}
 
-          {entries.length === 0 ? (
-            <View style={styles.emptyCard}>
-              <Text style={styles.emptyTitle}>No entries yet</Text>
-              <Text style={styles.emptyDescription}>
-                Tap the plus button to add multiple words or sentences at once.
-              </Text>
-            </View>
-          ) : (
+          {entries.length === 0 ? null : (
             groupedEntries.map((group) => (
-              <View key={group.id} style={styles.groupCard}>
-                <Text style={styles.groupTitle}>{group.name}</Text>
-                {group.items.length === 0 ? (
-                  <Text style={styles.groupEmptyText}>
-                    This section does not have any text yet.
-                  </Text>
-                ) : (
+              <View key={group.id} style={[styles.groupCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.borderColor }]}>
+                <View style={styles.groupTitleContainer}>
+                  <Text style={[styles.groupTitle, { color: theme.colors.text }]}>{group.name}</Text>
+                  <View style={styles.groupTitleiconRow}>
+                    <TouchableOpacity style={styles.groupTitleicon}>
+                      <Feather name="more-horizontal" size={24} color={theme.colors.text} />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.groupTitleicon}>
+                      <Feather name="chevron-up" size={24} color={theme.colors.text} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                {group.items.length === 0 ? null : (
                   group.items.map((item) => (
-                    <TouchableOpacity key={item.id} style={styles.entryButton} onPress={() => handleCopy(item.text)}>
-                      <Text style={styles.entryButtonText}>
+                    <TouchableOpacity key={item.id} style={[styles.entryButton, { backgroundColor: theme.colors.card, borderColor: theme.colors.borderColor }]} onPress={() => handleCopy(item.text)}>
+                      <Text style={[styles.entryButtonText, { color: theme.colors.text }]}>
                         {item.text}
                       </Text>
                     </TouchableOpacity>
@@ -396,18 +400,18 @@ export default function AddTextLibrary() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "orange",
+    // backgroundColor: "orange",
   },
   content: {
     paddingHorizontal: 16,
     paddingBottom: 100, // Make space for floating button
-    backgroundColor: "lightblue",
+    // backgroundColor: "lightblue",
   },
   bannerCard: {
     width: "100%",
     height: "15%",
     // marginBottom: 24,
-    backgroundColor: "lightgreen",
+    // backgroundColor: "lightgreen",
   },
   banner: {
     width: "100%",
@@ -425,14 +429,24 @@ const styles = StyleSheet.create({
   },
   titleSection: {
     width: "100%",
-    justifyContent: "center",
-    backgroundColor: "red",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    // backgroundColor: "red",
   },
   titleInput: {
+    width: "80%",
     fontSize: 32,
     fontWeight: "700",
     color: "#000",
     backgroundColor: "white",
+  },
+  icon: {
+    width: 48,
+    height: 48,
+    justifyContent: "center",
+    alignItems: "center",
+    // backgroundColor: "pink",
   },
   categorySection: {
     marginTop: 10,
@@ -511,53 +525,45 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "700",
   },
-  emptyCard: {
-    borderRadius: 24,
-    padding: 20,
-    backgroundColor: "#fffaf4",
-    borderWidth: 1,
-    borderColor: "#e5d7c7",
-  },
-  emptyTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: "#24384c",
-    marginBottom: 8,
-  },
-  emptyDescription: {
-    color: "#6d7a86",
-    lineHeight: 22,
-  },
   groupCard: {
-    backgroundColor: "#fffaf4",
-    borderRadius: 24,
-    padding: 18,
-    marginBottom: 14,
+    paddingTop: 10,
+    paddingHorizontal: 13,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#e5d7c7",
+    marginTop: 12,
+  },
+  groupTitleContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+    // backgroundColor: "green",
   },
   groupTitle: {
     fontSize: 17,
     fontWeight: "800",
-    color: "#17324d",
-    marginBottom: 10,
   },
-  groupEmptyText: {
-    color: "#7f8b96",
+  groupTitleicon: {
+    width: 32,
+    height: 32,
+  },
+  groupTitleiconRow: {
+    flexDirection: "row",
+    gap: 5,
   },
   entryButton: {
-    backgroundColor: '#fff',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    height: 30,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#e5d7c7',
-    marginBottom: 8,
-    alignSelf: 'flex-start', // Fit content width
+    marginBottom: 12,
+    alignSelf: 'flex-start',
   },
   entryButtonText: {
     flex: 1,
-    color: "#314457",
     lineHeight: 22,
   },
   floatingButton: {

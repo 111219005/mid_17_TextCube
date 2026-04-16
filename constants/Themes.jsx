@@ -2,7 +2,7 @@ export const LightTheme = {
   dark: false,
   colors: {
     background: "#F7F6F4",
-    text: "#24384c",
+    text: "#000",
     card: "#ffffff",
     primary: "#cacaca",
     tabBar: "#ffffff",
