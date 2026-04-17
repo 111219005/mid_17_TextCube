@@ -412,7 +412,6 @@ export default function AddTextLibrary() {
     }
   }, [editingLibrary, title, bannerUri, categories, entries, expandedGroups, saveLibrary, router]);
 
-  // 隨時保持 handleSaveRef 是最新的函式，這樣就不會因為函式重建而觸發 useEffect
   useEffect(() => {
     handleSaveRef.current = handleSave;
   }, [handleSave]);
@@ -423,7 +422,6 @@ export default function AddTextLibrary() {
       return;
     }
 
-    // 阻擋初次載入資料時觸發的自動存檔
     if (skipNextAutoSave.current) {
       skipNextAutoSave.current = false;
       return;
@@ -892,7 +890,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   entryButton: {
-    height: 30,
+    height: "auto",
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 10,
@@ -901,9 +899,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     // marginBottom: 10,
     alignSelf: 'flex-start',
+    maxWidth: "100%",
   },
   entryButtonText: {
-    flex: 1,
     fontWeight: "500",
   },
   floatingButton: {
