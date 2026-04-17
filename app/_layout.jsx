@@ -1,6 +1,6 @@
 import "react-native-gesture-handler";
 import { View, StyleSheet } from "react-native";
-import { Stack, usePathname } from "expo-router";
+import { Stack, usePathname, useRouter } from "expo-router";
 import { enableScreens } from "react-native-screens";
 import { TextLibraryProvider } from "../components/TextLibraryContext.jsx";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -20,6 +20,7 @@ function AppLayoutContent() {
     const insets = useSafeAreaInsets();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const pathname = usePathname();
+    const router = useRouter();
     const isHomePage = pathname === "/";
     const isAddTextLibrary = pathname === "/AddTextLibrary";
     const { theme, isDark } = useTheme();
@@ -56,7 +57,10 @@ function AppLayoutContent() {
                             <NavBar onMenuPress={() => setIsMenuOpen(true)} />
                         ) : (
                             <View style={isAddTextLibrary ? [styles.absoluteHeader, { top: insets.top }] : {}}>
-                                <BackTopBar title={pageTitle} />
+                                <BackTopBar
+                                    title={pageTitle}
+                                    onBackPress={isAddTextLibrary ? () => router.replace('/TextLibrary') : undefined}
+                                />
                             </View>
                         )}
                         <View style={styles.content}>

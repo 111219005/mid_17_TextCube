@@ -3,13 +3,15 @@ import { useRouter } from "expo-router";
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from "../context/ThemeContext";
 
-export default function BackTopBar({title}) {
+export default function BackTopBar({ title, onBackPress }) {
     const router = useRouter();
     const { theme } = useTheme();
 
+    const handleBack = onBackPress || (() => router.back());
+
     return (
         <View style={styles.container}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.icons}>
+            <TouchableOpacity onPress={handleBack} style={styles.icons}>
                 <Ionicons name="chevron-back-outline" size={24} color={theme.colors.text} />
             </TouchableOpacity>
             {title ? (
