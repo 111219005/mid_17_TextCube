@@ -7,6 +7,7 @@ import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
 import { useTextLibraries } from "../components/TextLibraryContext.jsx";
 import * as Clipboard from 'expo-clipboard';
 import { useTheme } from "../context/ThemeContext";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const DEFAULT_IMAGE = require("../assets/image/sakura.jpg");
 
@@ -33,14 +34,13 @@ const DraggableEntry = ({ item, theme, handleCopy, onDrop, scrollOffset, setScro
         longPressTimer.current = setTimeout(() => {
           isDraggingRef.current = true;
           setIsDragging(true);
-          setScrollEnabled(false); // 鎖定背景滾動
-        }, 400); // 400 毫秒視為長按
+          setScrollEnabled(false);
+        }, 400);
       },
       onPanResponderMove: (e, gestureState) => {
         if (isDraggingRef.current) {
           pan.setValue({ x: gestureState.dx, y: gestureState.dy });
         } else {
-          // 如果還沒達到長按時間就開始大範圍滑動，代表使用者是在滾動畫面，取消長按判定
           if (Math.abs(gestureState.dx) > 10 || Math.abs(gestureState.dy) > 10) {
             clearTimeout(longPressTimer.current);
           }
@@ -53,10 +53,9 @@ const DraggableEntry = ({ item, theme, handleCopy, onDrop, scrollOffset, setScro
           isDraggingRef.current = false;
           setIsDragging(false);
           setScrollEnabled(true);
-          onDrop(item, gestureState); // 觸發放置邏輯
+          onDrop(item, gestureState);
           Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start();
         } else {
-          // 短按判定 (點擊)
           if (Math.abs(gestureState.dx) < 10 && Math.abs(gestureState.dy) < 10) {
             handleCopy(item.text);
           }
@@ -131,6 +130,8 @@ export default function AddTextLibrary() {
   const isMounted = useRef(false);
   const { theme } = useTheme();
   const [expandedGroups, setExpandedGroups] = useState({});
+  const insets = useSafeAreaInsets();
+  const sectionContainerY = useRef(0);
   const skipNextAutoSave = useRef(typeof id === "string");
   const handleSaveRef = useRef(null);
   const [isScrollEnabled, setIsScrollEnabled] = useState(true);
@@ -251,23 +252,21 @@ export default function AddTextLibrary() {
   };
 
   const handleDrop = useCallback((item, gestureState) => {
-    // 計算放開時的手指位置相對於 ScrollView 內容區塊的絕對座標
-    const absoluteDropY = gestureState.moveY - scrollViewLayout.current.y + scrollOffset.current;
+    const absoluteDropY = gestureState.moveY - insets.top - scrollViewLayout.current.y + scrollOffset.current;
     
     let closestId = item.categoryId;
     let minDistance = Infinity;
 
     for (const [id, layout] of Object.entries(sectionLayouts.current)) {
       if (!layout) continue;
+      const groupTrueY = sectionContainerY.current + layout.y;
 
-      // 優先判斷是否落在該 section 的範圍內
-      if (absoluteDropY >= layout.y && absoluteDropY <= layout.y + layout.height) {
+      if (absoluteDropY >= groupTrueY && absoluteDropY <= groupTrueY + layout.height) {
         closestId = id === "no-section" ? null : id;
         break;
       }
 
-      // 備案：如果落在縫隙中，則找尋中心點最近的 section
-      const sectionCenter = layout.y + (layout.height / 2);
+      const sectionCenter = groupTrueY + (layout.height / 2);
       const dist = Math.abs(absoluteDropY - sectionCenter);
       if (dist < minDistance) {
         minDistance = dist;
@@ -280,7 +279,7 @@ export default function AddTextLibrary() {
       setExpandedGroups(prev => ({ ...prev, [closestId === null ? "no-section" : closestId]: true }));
       showToast("已移動至新段落");
     }
-  }, []);
+  }, [insets.top]);
 
   const handleAddEntries = () => {
     const lines = entryInput
@@ -289,7 +288,7 @@ export default function AddTextLibrary() {
       .filter(Boolean);
 
     if (lines.length === 0) {
-      Alert.alert("No text yet", "Add at least one word or sentence first.");
+      Alert.alert("至少需輸入一文字。");
       return;
     }
 
@@ -466,7 +465,7 @@ export default function AddTextLibrary() {
             onChangeText={setTitle}
             placeholder="新增文字庫標題"
             placeholderTextColor={theme.dark ? "#888" : "#c4c4c4"}
-            style={styles.titleInput}
+            style={[styles.titleInput, { color: theme.colors.text }]}
           />
           <TouchableOpacity style={styles.icon} onPress={() => setIsCategoryVisible(!isCategoryVisible)}>
             <Feather name="tag" size={32} color={theme.colors.text} />
@@ -488,7 +487,8 @@ export default function AddTextLibrary() {
                   onPress={() => {
                     const layout = sectionLayouts.current[category.id];
                     if (layout && layout.y !== undefined) {
-                      scrollViewRef.current?.scrollTo({ y: Math.max(0, layout.y - 20), animated: true });
+                      const groupTrueY = sectionContainerY.current + layout.y;
+                      scrollViewRef.current?.scrollTo({ y: Math.max(0, groupTrueY - 20), animated: true });
                     }
                   }}
                 >
@@ -527,7 +527,7 @@ export default function AddTextLibrary() {
 
         <View style={[styles.line, { backgroundColor: theme.colors.text }]} />
 
-        <View style={styles.section}>
+        <View style={styles.section} onLayout={(e) => { sectionContainerY.current = e.nativeEvent.layout.y; }}>
           {entries.length === 0 ? null : (
             groupedEntries.map((group) => (
               <View

@@ -72,7 +72,7 @@ export default function TextLibraries() {
         >
           <Pressable style={[styles.modalCard, { backgroundColor: theme.colors.card }]} onPress={() => { }}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>編輯文字庫標題</Text>
+              <Text style={[styles.modalTitle, { color: theme.colors.text }]}>編輯文字庫標題</Text>
             </View>
             <TextInput
               value={editingTitle}
@@ -90,7 +90,7 @@ export default function TextLibraries() {
                 <TouchableOpacity style={styles.modalOption} onPress={() => {
                   setModalVisible(false);
                 }}>
-                  <Text style={styles.modalOptionText}>取消</Text>
+                  <Text style={[styles.modalOptionText, { color: theme.colors.text }]}>取消</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.modalOption} onPress={() => {
                   if (selectedLibrary) {
@@ -101,12 +101,37 @@ export default function TextLibraries() {
                   }
                   setModalVisible(false);
                 }}>
-                  <Text style={styles.modalOptionText}>儲存</Text>
+                  <Text style={[styles.modalOptionText, { color: theme.colors.text }]}>儲存</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </Pressable>
         </Pressable>
+      </Modal>
+
+      <Modal transparent visible={deleteModalVisible} animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.deleteModalCard, { backgroundColor: theme.colors.card }]}>
+            <Text style={[styles.deleteModalTitle, { color: theme.colors.text }]}>確定要刪除文字庫嗎？</Text>
+            <View style={styles.deleteModalButtonsContainer}>
+              <TouchableOpacity style={styles.deleteCancelButton} onPress={() => setDeleteModalVisible(false)}>
+                <Text style={[styles.modalOptionText, { color: theme.colors.text }]}>取消</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.deleteConfirmButton}
+                onPress={() => {
+                  if (selectedLibrary) {
+                    deleteLibrary(selectedLibrary.id);
+                  }
+                  setDeleteModalVisible(false);
+                  setModalVisible(false);
+                }}
+              >
+                <Text style={[styles.modalOptionText, { color: 'red' }]}>確認刪除</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
     </View>
   );
@@ -239,7 +264,7 @@ const styles = StyleSheet.create({
   },
   deleteModalCard: {
     backgroundColor: "#fff9f0",
-    borderRadius: 28,
+    borderRadius: 8,
     paddingHorizontal: 0,
     paddingVertical: 0,
     width: "80%",
@@ -256,17 +281,14 @@ const styles = StyleSheet.create({
   },
   deleteModalButtonsContainer: {
     flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   deleteConfirmButton: {
     flex: 1,
     paddingVertical: 25,
     justifyContent: "center",
     alignItems: "center",
-  },
-  deleteModalDivider: {
-    width: 1,
-    backgroundColor: "#e5d7c7",
-    height: "100%",
   },
   deleteCancelButton: {
     flex: 1,
