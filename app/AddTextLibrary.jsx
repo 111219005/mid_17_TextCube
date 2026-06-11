@@ -390,14 +390,16 @@ export default function AddTextLibrary() {
   };
 
   const handleSave = useCallback(() => {
-    if (!title.trim()) {
+    const trimmedTitle = title.trim();
+    const shouldSave = trimmedTitle || categories.length > 0 || entries.length > 0;
+    if (!shouldSave) {
       return;
     }
     showToast("存檔中");
     const savedId = saveLibrary({
       id: currentLibraryIdRef.current,
       createdAt: editingLibrary?.createdAt,
-      title,
+      title: trimmedTitle || "無題",
       bannerUri,
       categories,
       entries,
@@ -909,8 +911,8 @@ const styles = StyleSheet.create({
   },
   floatingButton: {
     position: "absolute",
-    right: 24,
-    bottom: 28,
+    right: 32,
+    bottom: 42,
     width: 64,
     height: 64,
     borderRadius: 32,

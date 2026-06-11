@@ -27,7 +27,7 @@ const useTextLibraryStore = create(
 
         const normalizedLibrary = {
           id: draft.id ?? createId("library"),
-          title: draft.title.trim() || "Untitled Library",
+          title: draft.title.trim() || "無題",
           bannerUri: draft.bannerUri ?? null,
           categories,
           entries,

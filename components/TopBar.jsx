@@ -2,18 +2,18 @@ import { View, Image, StyleSheet, TouchableOpacity } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import { useTheme } from "../context/ThemeContext";
 
-export default function TopBar({ onMenuPress = () => { } }) {
+export default function TopBar({ onMenuPress = () => {}, onLogoPress = () => {} }) {
   const { theme } = useTheme();
 
   return (
     <View style={styles.topbar}>
-      <TouchableOpacity onPress={onMenuPress}>
+      <TouchableOpacity onPress={onMenuPress} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
         <View style={styles.icons}>
           <Feather name="menu" size={24} color={theme.colors.text} />
         </View>
       </TouchableOpacity>
 
-      <View style={styles.icons}>
+      <TouchableOpacity onPress={onLogoPress} style={styles.icons} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
         {theme.dark ? (
           <Image
             source={require("../assets/icon/logo_light/logo_light.png")}
@@ -25,12 +25,11 @@ export default function TopBar({ onMenuPress = () => { } }) {
             style={styles.logo}
           />
         )}
-      </View>
+      </TouchableOpacity>
 
       <View style={styles.icons}>
         <Feather name="search" size={24} color={theme.colors.text} />
       </View>
-
     </View>
   );
 }
@@ -45,23 +44,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     borderBottomWidth: 1,
     borderBottomColor: "#727272",
-    // backgroundColor: "pink",
   },
   icons: {
     width: 48,
     height: 48,
     alignItems: "center",
     justifyContent: "center",
-    // backgroundColor: "red",
   },
   logo: {
     width: 32,
     height: 32,
-  },
-  line: {
-    height: 1,
-    backgroundColor: "#727272",
-    width: "100%",
-    marginTop: 8,
   },
 });

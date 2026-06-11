@@ -1,11 +1,32 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, PanResponder } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from "../context/ThemeContext";
+import { useMemo } from "react";
 
 export default function Drawer({ isOpen, onClose }) {
     const router = useRouter();
     const { theme } = useTheme();
+
+    const panResponder = useMemo(
+        () =>
+            PanResponder.create({
+                onStartShouldSetPanResponder: () => false,
+                onMoveShouldSetPanResponder: (evt, gestureState) => {
+                    const { dx, dy } = gestureState;
+                    return Math.abs(dx) > 20 && Math.abs(dx) > Math.abs(dy);
+                },
+                onPanResponderRelease: (evt, gestureState) => {
+                    const { dx, vx } = gestureState;
+                    const swipeThreshold = 80;
+                    const velocityThreshold = 0.3;
+                    if (dx < -swipeThreshold || (dx < -40 && vx < -velocityThreshold)) {
+                        onClose();
+                    }
+                },
+            }),
+        [onClose]
+    );
 
     if (!isOpen) {
         return null;
@@ -13,7 +34,7 @@ export default function Drawer({ isOpen, onClose }) {
 
     return (
 
-        <View style={styles.overlay}>
+        <View style={styles.overlay} {...panResponder.panHandlers}>
             <View style={[styles.drawer, { backgroundColor: theme.colors.card }]}>
                 <SafeAreaView edges={['top']}>
                     <View style={styles.titleContainer}>
@@ -23,40 +44,25 @@ export default function Drawer({ isOpen, onClose }) {
 
                     <TouchableOpacity onPress={() => { onClose(); router.replace("/"); }}>
                         <View style={[styles.item, styles.firstItem]}>
-                            <Text style={[styles.itemText, { color: theme.colors.text }]}>首頁</Text>
+                            <Text style={[styles.itemText, { color: theme.colors.text }]}>文字庫。</Text>
                         </View>
                     </TouchableOpacity>
 
-                    <TouchableOpacity
-                        onPress={() => {
-                            router.push("/TextLibrary");
-                            onClose();
-                        }}
-                    >
+                    <TouchableOpacity onPress={() => { onClose(); router.replace("/"); }}>
                         <View style={styles.item}>
-                            <Text style={[styles.itemText, { color: theme.colors.text }]}>文字庫</Text>
+                            <Text style={[styles.itemText, { color: theme.colors.text }]}>分類。</Text>
                         </View>
                     </TouchableOpacity>
 
-                    <TouchableOpacity
-                        onPress={() => {
-                            router.push("/AddTextLibrary");
-                            onClose();
-                        }}
-                    >
+                    <TouchableOpacity onPress={() => { onClose(); router.replace("/"); }}>
                         <View style={styles.item}>
-                            <Text style={[styles.itemText, { color: theme.colors.text }]}>新增文字庫</Text>
+                            <Text style={[styles.itemText, { color: theme.colors.text }]}>垃圾桶。</Text>
                         </View>
                     </TouchableOpacity>
-
-                    <TouchableOpacity
-                        onPress={() => {
-                            router.push("/Setting");
-                            onClose();
-                        }}
-                    >
+                                
+                    <TouchableOpacity onPress={() => { onClose(); router.push("/Setting"); }}>
                         <View style={styles.item}>
-                            <Text style={[styles.itemText, { color: theme.colors.text }]}>設定</Text>
+                            <Text style={[styles.itemText, { color: theme.colors.text }]}>設定。</Text>
                         </View>
                     </TouchableOpacity>
                 </SafeAreaView>
@@ -84,7 +90,7 @@ const styles = StyleSheet.create({
     drawer: {
         width: 300,
         height: "100%",
-        paddingLeft: 16,
+        paddingLeft: 36,
         elevation: 22,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
@@ -104,7 +110,7 @@ const styles = StyleSheet.create({
     line: {
         height: 1,
         width: 300,
-        left: -16,
+        left: -36,
     },
     firstItem: {
         marginTop: 8,
@@ -112,10 +118,10 @@ const styles = StyleSheet.create({
     item: {
         flexDirection: "row",
         alignItems: "center",
-        paddingVertical: 16,
+        paddingVertical: 14,
     },
     itemText: {
-        fontSize: 16,
+        fontSize: 20,
         fontWeight: "500",
     },
 });

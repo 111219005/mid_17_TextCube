@@ -3,7 +3,8 @@ import Feather from "@expo/vector-icons/Feather";
 import { useRouter } from "expo-router";
 import { useTextLibraries } from "../components/TextLibraryContext.jsx";
 import { useTheme } from "../context/ThemeContext";
-import { useState } from "react";
+import { useState, useRef, useEffect, useContext } from "react";
+import { ScrollToTopContext } from "../components/ScrollToTopContext.jsx";
 
 const DEFAULT_IMAGE = require("../assets/image/sakura.jpg");
 
@@ -16,10 +17,17 @@ export default function TextLibraries() {
   const [selectedLibrary, setSelectedLibrary] = useState(null);
   const [editingTitle, setEditingTitle] = useState("");
 
+  const { register } = useContext(ScrollToTopContext);
+  const scrollRef = useRef(null);
+  useEffect(() => {
+    register(scrollRef);
+    return () => register(null);
+  }, [register]);
 
   return (
     <View style={[styles.container]}>
       <ScrollView
+        ref={scrollRef}
         style={styles.screen}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
