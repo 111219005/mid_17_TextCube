@@ -1,15 +1,23 @@
-import { View, Image, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Image, StyleSheet, TouchableOpacity, Text } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import { useTheme } from "../context/ThemeContext";
+import { useRouter } from "expo-router";
+import { useAuth } from "../context/AuthContext";
+import UserAvatarPreview from "./UserAvatarPreview";
 
 export default function TopBar({ onMenuPress = () => {}, onLogoPress = () => {} }) {
   const { theme } = useTheme();
+  const router = useRouter();
+  const { isSignedIn } = useAuth();
 
   return (
     <View style={styles.topbar}>
-      <TouchableOpacity onPress={onMenuPress} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+      <TouchableOpacity 
+        onPress={onMenuPress}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
         <View style={styles.icons}>
-          <Feather name="menu" size={24} color={theme.colors.text} />
+          <UserAvatarPreview showPreviewModal={true} />
         </View>
       </TouchableOpacity>
 
@@ -54,5 +62,17 @@ const styles = StyleSheet.create({
   logo: {
     width: 32,
     height: 32,
+  },
+  authContainer: {
+    flex: 1,
+    alignItems: "center",
+  },
+  authText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  hint: {
+    fontSize: 10,
+    marginTop: 2,
   },
 });

@@ -14,6 +14,7 @@ import { ThemeProvider as CustomThemeProvider, useTheme } from '../context/Theme
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
 import { StatusBar } from "react-native";
 import Drawer from "../components/Drawer.jsx";
+import { AuthProvider } from "../context/AuthContext.jsx";
 
 enableScreens();
 
@@ -67,6 +68,10 @@ function AppLayoutContent() {
         pageTitle = "文字庫";
     } else if (pathname === "/Setting") {
         pageTitle = "設定";
+    } else if (pathname === "/Login") {
+        pageTitle = "登入";
+    } else if (pathname === "/Register") {
+        pageTitle = "註冊";
     }
 
     const navigationTheme = {
@@ -123,6 +128,8 @@ function AppLayoutContent() {
                                 <Stack.Screen name="TextLibrary" />
                                 <Stack.Screen name="Setting" />
                                 <Stack.Screen name="DevTool" />
+                                <Stack.Screen name="Login" />
+                                <Stack.Screen name="Register" />
                             </Stack>
                         </View>
                         <Drawer isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
@@ -136,13 +143,15 @@ function AppLayoutContent() {
 export default function RootLayout() {
     return (
         <SafeAreaProvider>
-                    <TextLibraryProvider>
-                        <ScrollToTopProvider>
-                            <CustomThemeProvider>
-                                <AppLayoutContent />
-                            </CustomThemeProvider>
-                        </ScrollToTopProvider>
-                    </TextLibraryProvider>
+            <AuthProvider>
+                <TextLibraryProvider>
+                    <ScrollToTopProvider>
+                        <CustomThemeProvider>
+                            <AppLayoutContent />
+                        </CustomThemeProvider>
+                    </ScrollToTopProvider>
+                </TextLibraryProvider>
+            </AuthProvider>
         </SafeAreaProvider>
     );
 }
