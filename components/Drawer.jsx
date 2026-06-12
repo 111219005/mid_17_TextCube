@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, PanResponder } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, PanResponder, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from "../context/ThemeContext";
@@ -10,7 +10,7 @@ import UserAvatarPreview from "./UserAvatarPreview";
 export default function Drawer({ isOpen, onClose }) {
     const router = useRouter();
     const { theme } = useTheme();
-    const { isSignedIn, user } = useAuth();
+    const { isSignedIn, user, signOut } = useAuth();
     const { libraries } = useTextLibraries();
 
     const panResponder = useMemo(
@@ -51,14 +51,14 @@ export default function Drawer({ isOpen, onClose }) {
                         
                         <View style={styles.userInfoSection}>
                             {isSignedIn ? (
-                                <>
+                                <View>
                                     <Text style={[styles.username, { color: theme.colors.text }]}>
                                         {user?.username || '使用者'}
                                     </Text>
                                     <Text style={[styles.libraryInfo, { color: theme.colors.text }]}>
                                         {libraries.length} 個文字庫 / {totalEntries} 個文字方塊
                                     </Text>
-                                </>
+                                </View>
                             ) : (
                                 <View>
                                     <TouchableOpacity
@@ -101,8 +101,28 @@ export default function Drawer({ isOpen, onClose }) {
                     {isSignedIn && (
                         <TouchableOpacity
                             onPress={() => {
-                                // TODO: Implement sign out
-                                onClose();
+                                Alert.alert(
+                                    '登出',
+                                    '確定要登出嗎？',
+                                    [
+                                        { text: '取消', style: 'cancel' },
+                                        {
+                                            text: '登出',
+                                            style: 'destructive',
+                                            onPress: async () => {
+                                                try {
+                                                    await signOut();
+                                                } catch (e) {
+                                                    // ignore
+                                                }
+                                                onClose();
+                                                router.replace('/');
+                                                Alert.alert('已登出', '您已成功登出。');
+                                            },
+                                        },
+                                    ],
+                                    { cancelable: true }
+                                );
                             }}
                         >
                             <View style={styles.item}>
