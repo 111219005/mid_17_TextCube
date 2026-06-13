@@ -7,6 +7,12 @@ import { ScrollToTopProvider, ScrollToTopContext } from "../components/ScrollToT
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useState, useContext, useMemo } from "react";
 import { DefaultTheme } from "@react-navigation/native";
+import { useFonts } from "expo-font";
+import {
+    ShipporiMinchoB1_400Regular,
+    ShipporiMinchoB1_500Medium,
+    ShipporiMinchoB1_700Bold,
+} from "@expo-google-fonts/shippori-mincho-b1";
 import NavBar from "../components/TopBar.jsx";
 import BackTopBar from "../components/BackTopBar.jsx";
 import BackgroundImage from "../components/BackgroundImage.jsx";
@@ -27,6 +33,16 @@ function AppLayoutContent() {
     const isAddTextLibrary = pathname === "/AddTextLibrary";
     const { theme, isDark } = useTheme();
     const { scrollToTop } = useContext(ScrollToTopContext);
+
+    const [fontsLoaded] = useFonts({
+        ShipporiMinchoB1_400Regular,
+        ShipporiMinchoB1_500Medium,
+        ShipporiMinchoB1_700Bold,
+    });
+
+    if (!fontsLoaded) {
+        return null;
+    }
 
     const panResponder = useMemo(
         () =>

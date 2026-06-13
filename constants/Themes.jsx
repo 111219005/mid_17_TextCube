@@ -1,5 +1,8 @@
 export const LightTheme = {
   dark: false,
+  fontFamily: "ShipporiMinchoB1_400Regular",
+  fontFamilyMedium: "ShipporiMinchoB1_500Medium",
+  fontFamilyBold: "ShipporiMinchoB1_700Bold",
   colors: {
     background: "#F7F6F4",
     text: "#000",
@@ -12,6 +15,9 @@ export const LightTheme = {
 
 export const DarkTheme = {
   dark: true,
+  fontFamily: "ShipporiMinchoB1_400Regular",
+  fontFamilyMedium: "ShipporiMinchoB1_500Medium",
+  fontFamilyBold: "ShipporiMinchoB1_700Bold",
   colors: {
     background: "#000000",
     text: "#ffffff",
