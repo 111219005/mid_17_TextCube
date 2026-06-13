@@ -1,5 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut as firebaseSignOut,
+} from 'firebase/auth';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from '../firebaseConfig';
 
 const AuthContext = createContext();
 
@@ -9,56 +17,99 @@ export const AuthProvider = ({ children }) => {
   const [avatarUri, setAvatarUri] = useState(require('../assets/image/sakura.jpg'));
 
   useEffect(() => {
-    bootstrapAsync();
-  }, []);
+    let isMounted = true;
 
-  const bootstrapAsync = async () => {
-    try {
-      const savedUser = await AsyncStorage.getItem('user');
-      const savedAvatar = await AsyncStorage.getItem('userAvatar');
-      if (savedUser) {
-        setUser(JSON.parse(savedUser));
+    const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
+      if (!isMounted) {
+        return;
       }
-      if (savedAvatar) {
-        setAvatarUri({ uri: savedAvatar });
+      if (authUser) {
+        try {
+          const userRef = doc(db, 'users', authUser.uid);
+          const userSnap = await getDoc(userRef);
+          const profile = userSnap.exists() ? userSnap.data() : null;
+
+          setUser({
+            id: authUser.uid,
+            email: authUser.email,
+            username: profile?.username || authUser.email?.split('@')[0] || '使用者',
+          });
+
+          if (profile?.avatarUri) {
+            setAvatarUri({ uri: profile.avatarUri });
+          }
+        } catch (e) {
+          setUser({
+            id: authUser.uid,
+            email: authUser.email,
+            username: authUser.email?.split('@')[0] || '使用者',
+          });
+        }
+      } else {
+        setUser(null);
       }
-    } catch (e) {
-      // Restoring token failed
-    } finally {
       setIsLoading(false);
-    }
-  };
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
 
   const authContext = {
     signUp: async (email, password, username) => {
-      // TODO: Implement Firebase signup
-      const newUser = { email, username, id: Date.now().toString() };
-      await AsyncStorage.setItem('user', JSON.stringify(newUser));
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const authUser = userCredential.user;
+      const userRef = doc(db, 'users', authUser.uid);
+      await setDoc(userRef, {
+        email: authUser.email,
+        username,
+        createdAt: serverTimestamp(),
+        avatarUri: null,
+      });
+      const newUser = {
+        id: authUser.uid,
+        email: authUser.email,
+        username,
+      };
       setUser(newUser);
       return newUser;
     },
     signIn: async (email, password) => {
-      // TODO: Implement Firebase login
-      const user = { email, username: email.split('@')[0], id: Date.now().toString() };
-      await AsyncStorage.setItem('user', JSON.stringify(user));
-      setUser(user);
-      return user;
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const authUser = userCredential.user;
+      const userRef = doc(db, 'users', authUser.uid);
+      const userSnap = await getDoc(userRef);
+      const profile = userSnap.exists() ? userSnap.data() : null;
+      const signedInUser = {
+        id: authUser.uid,
+        email: authUser.email,
+        username: profile?.username || authUser.email?.split('@')[0] || '使用者',
+      };
+      setUser(signedInUser);
+      if (profile?.avatarUri) {
+        setAvatarUri({ uri: profile.avatarUri });
+      }
+      return signedInUser;
     },
     signOut: async () => {
-      await AsyncStorage.removeItem('user');
-      await AsyncStorage.removeItem('userAvatar');
+      await firebaseSignOut(auth);
       setUser(null);
       setAvatarUri(require('../assets/image/sakura.jpg'));
     },
     updateAvatar: async (uri) => {
-      await AsyncStorage.setItem('userAvatar', uri);
+      if (user?.id) {
+        const userRef = doc(db, 'users', user.id);
+        await updateDoc(userRef, { avatarUri: uri });
+      }
       setAvatarUri({ uri });
     },
     updateUsername: async (username) => {
-      if (user) {
-        const updatedUser = { ...user, username };
-        await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
-        setUser(updatedUser);
+      if (user?.id) {
+        const userRef = doc(db, 'users', user.id);
+        await updateDoc(userRef, { username });
+        setUser({ ...user, username });
       }
     },
     isSignedIn: !!user,

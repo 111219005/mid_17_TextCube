@@ -13,11 +13,11 @@
       "backgroundColor": "#FFFFFF"
     },
     "android": {
+      "package": "com.app.textcube",
       "adaptiveIcon": {
         "foregroundImage": "./assets/image/adaptive-foreground.png",
         "backgroundImage": "./assets/image/adaptive-background.png"
-      },
-      "package": "com.app.textcube"
+      }
     },
     "extra": {
       "router": {},
